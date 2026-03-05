@@ -17,7 +17,7 @@ export const ApplicantScreen = () => {
       <h2 className="text-xl font-bold text-left text-xl text-slate-800 dark:text-slate-200">
         Información del Aspirante
       </h2>
-      <div className="pt-4 grid grid-cols-1 text-left md:grid-cols-2 gap-6 mb-3">
+      <div className="flex flex-col gap-3 pt-4 text-left mb-3">
         <InputSelect
           name="applicant.bloodType"
           label="Tipo de sangre"
