@@ -15,3 +15,5 @@ const career = defineCollection({
     studyPlan: z.string(),
   }),
 });
+
+export const collections = { career };
