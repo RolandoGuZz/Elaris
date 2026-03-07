@@ -2,17 +2,18 @@ import { useFormContext } from "react-hook-form";
 import type { Path } from "react-hook-form";
 import type { FormGetToken } from "../core/types/FormGetToken";
 
-interface PropsInputSelect {
+interface PropsInput {
   name: Path<FormGetToken>;
   label?: string;
-  options?: string[];
 }
 
-export const InputSelect = ({ name, label, options }: PropsInputSelect) => {
+export const SelectState = ({ name, label }: PropsInput) => {
   const {
     register,
     formState: { errors },
   } = useFormContext<FormGetToken>();
+
+  const options = ["Casado", "Soltero", "Divorciado"] as const;
 
   const error = errors[name];
 
