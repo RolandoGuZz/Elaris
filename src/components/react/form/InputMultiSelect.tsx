@@ -1,6 +1,6 @@
 import { useFormContext } from "react-hook-form";
 import type { Path } from "react-hook-form";
-import type { FormGetToken } from "../core/types/FormGetToken";
+import type { FormGetToken } from "../core/types/IFormGetToken";
 
 interface PropsMultiSelect {
   options: string[];
@@ -43,9 +43,10 @@ export const InputMultiSelect = ({
                 ${
                   error
                     ? "border-red-500"
-                    : "border-slate-200 dark:border-slate-700 hover:border-primary/50"
+                    : isSelected
+                      ? "border-primary bg-primary/10"
+                      : "border-slate-200 dark:border-slate-700 hover:border-primary/50"
                 }
-                ${isSelected ? "border-primary bg-primary/5" : ""}
               `}
             >
               <input
@@ -55,7 +56,13 @@ export const InputMultiSelect = ({
                 className="sr-only"
               />
 
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+              <span
+                className={`text-sm font-medium transition-colors ${
+                  isSelected
+                    ? "text-primary"
+                    : "text-slate-600 dark:text-slate-400"
+                }`}
+              >
                 {option}
               </span>
             </label>

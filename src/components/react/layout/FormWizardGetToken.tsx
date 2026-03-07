@@ -2,17 +2,22 @@ import FormWizard from "react-form-wizard-component";
 import "react-form-wizard-component/dist/style.css";
 import { STEPS } from "../core/const/steps.ts";
 import { useFormWizard } from "../hooks/useFormWizard.ts";
-import type { FormGetToken } from "../core/types/FormGetToken.ts";
 import { FormProvider, useForm } from "react-hook-form";
+import type { IFormGetToken } from "../core/types/IFormGetToken.ts";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { formGetTokenSchema } from "../core/validations/FormGetTokenValidations.ts";
 
 export default function FormWizardGetToken() {
   const { tabChanged, handleComplete } = useFormWizard();
-  const methods = useForm<FormGetToken>({
-    mode: "onBlur",
+  const methods = useForm<IFormGetToken>({
+    resolver: zodResolver(formGetTokenSchema),
+    mode: "onChange",
   });
+
   const onSubmitForm = (data: any) => {
     console.log("Enviando formulario");
   };
+
   return (
     <>
       <FormProvider {...methods}>

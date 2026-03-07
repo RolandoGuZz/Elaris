@@ -1,3 +1,8 @@
+interface ICordinates {
+  lat: number;
+  lng: number;
+}
+
 interface IdentificationUser {
   firstName: string;
   lastName: string;
@@ -5,7 +10,7 @@ interface IdentificationUser {
   birthDate: string;
   gender: string;
   maritalStatus: string;
-  address: string;
+  address: ICordinates;
   phone: string;
   email: string;
   bloodType: string;
@@ -14,7 +19,7 @@ interface IdentificationUser {
   medications: string;
 }
 
-interface personalDocumentation: {
+interface personalDocumentation {
   birthCertificate: File | null;
   highSchoolCertificate: File | null;
   highSchoolProof: File | null;
@@ -51,9 +56,19 @@ interface Applicant {
   afrodescendant: string;
 }
 
-export interface FormGetToken {
+interface Responsible {
+  name: string;
+  lastName: string;
+  relationShip: string;
+  address: ICordinates;
+  occupation: string;
+  phone: string;
+}
+
+export interface IFormGetToken {
   identification: IdentificationUser;
   school: School;
-  personalDocumentation:personalDocumentation
-  applicant:Applicant
+  personalDocumentation: personalDocumentation;
+  applicant: Applicant;
+  responsible: Responsible;
 }
