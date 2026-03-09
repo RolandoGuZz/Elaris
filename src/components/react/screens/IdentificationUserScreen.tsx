@@ -49,7 +49,10 @@ export const IdentificationUserScreen = () => {
         <SelectSex label="Sexo" name="identification.gender" />
         <SelectState label="Estado Civil" name="identification.maritalStatus" />
       </div>
-      <MapComponent title="Indica tu domicilio en el mapa" />
+      <MapComponent
+        title="Indica tu domicilio en el mapa"
+        name="identification.address"
+      />
     </>
   );
 };
