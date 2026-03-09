@@ -46,7 +46,7 @@ const identificationUserSchema = z.object({
 
   email: z.string().email("Correo electrónico inválido"),
 
-  bloodType: z.string().min(1, "Selecciona un tipo de sangre"),
+  //bloodType: z.string().min(1, "Selecciona un tipo de sangre"),
 
   medicalConditions: z.string().optional(),
 
@@ -64,7 +64,7 @@ const fileSchema = z
 
 const personalDocumentationSchema = z.object({
   birthCertificate: fileSchema,
-  highSchoolCertificate: fileSchema,
+  //highSchoolCertificate: fileSchema,
   highSchoolProof: fileSchema,
   curp: fileSchema,
   photos: fileSchema,
@@ -75,7 +75,7 @@ const personalDocumentationSchema = z.object({
 const schoolSchema = z.object({
   name: z.string().min(2, "El nombre de la escuela es obligatorio"),
 
-  location: z.string().min(2, "La ubicación es obligatoria"),
+  location: coordinatesSchema,
 
   knowledgeArea: z.string().min(1, "Selecciona un área de conocimiento"),
 
@@ -105,7 +105,8 @@ const schoolSchema = z.object({
 
   certificateFolio: z
     .string()
-    .min(1, "El folio del certificado es obligatorio"),
+    .min(1, "El folio del certificado es obligatorio")
+    .optional(),
 
   schoolType: z.string().min(1, "Selecciona un tipo de escuela"),
 
@@ -117,31 +118,31 @@ const schoolSchema = z.object({
 const applicantSchema = z.object({
   bloodType: z.string().min(1, "Selecciona un tipo de sangre"),
 
-  diseases: z.array(z.string()).min(0),
+  diseases: z.array(z.string()).min(0).optional(),
 
   diseasesDetails: z.string().optional(),
 
-  allergies: z.array(z.string()).min(0),
+  allergies: z.array(z.string()).min(0).optional(),
 
   allergiesDetails: z.string().optional(),
 
-  specialMedications: z.array(z.string()).min(0),
+  specialMedications: z.array(z.string()).min(0).optional(),
 
-  medicationsDetails: z.string().optional(),
+  medicationsDetails: z.array(z.string()).min(0).optional(),
 
-  disability: z.string().min(1, "Debes seleccionar una opción"),
+  disability: z.array(z.string()).min(0).optional(),
 
   disabilityDetails: z.string().optional(),
 
-  indigenous: z.string().min(1, "Debes seleccionar una opción"),
+  indigenous: z.array(z.string()).min(0).optional(),
 
   ethnicGroup: z.string().optional(),
 
   indigenousLanguage: z.string().optional(),
 
-  languageDetails: z.string().optional(),
+  languageDetails: z.array(z.string()).min(0).optional(),
 
-  afrodescendant: z.string().min(1, "Debes seleccionar una opción"),
+  afrodescendant: z.string().min(1, "Debes seleccionar una opción").optional(),
 });
 
 /* ---------------- RESPONSABLE ---------------- */
@@ -155,7 +156,7 @@ const responsibleSchema = z.object({
 
   address: coordinatesSchema,
 
-  occupation: z.string().min(2, "La ocupación es obligatoria"),
+  occupation: z.string().min(1, "La ocupación es obligatoria"),
 
   phone: z.string().regex(/^[0-9]{10}$/, "El teléfono debe tener 10 dígitos"),
 });

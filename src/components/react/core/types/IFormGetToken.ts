@@ -46,13 +46,13 @@ interface Applicant {
   allergies: string[];
   allergiesDetails: string;
   specialMedications: string[];
-  medicationsDetails: string;
-  disability: string;
+  medicationsDetails: string[];
+  disability: string[];
   disabilityDetails: string;
-  indigenous: string;
+  indigenous: string[];
   ethnicGroup: string;
   indigenousLanguage: string;
-  languageDetails: string;
+  languageDetails: string[];
   afrodescendant: string;
 }
 

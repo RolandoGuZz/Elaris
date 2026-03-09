@@ -62,7 +62,10 @@ export const SchoolBackgroundScreen = () => {
           />
         </div>
       </section>
-      <MapComponent title="Ubicacion de tu institucion" />
+      <MapComponent
+        name="school.location"
+        title="Ubicacion de tu institucion"
+      />
     </div>
   );
 };

@@ -17,7 +17,7 @@ const DEFAULT_LOCATION: LatLngExpression = [16.793404, -96.675031];
 
 interface PropsMapsComponent {
   title?: string;
-  name?: "identification.address" | "responsible.address";
+  name?: "identification.address" | "responsible.address" | "school.location";
 }
 
 interface Coordinates {

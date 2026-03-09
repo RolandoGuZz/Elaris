@@ -26,8 +26,7 @@ export const ResponsibleScreen = () => {
       />
 
       <MapComponent
-        nameLat="responsible.address.lat"
-        nameLng="responsible.address.lng"
+        name="responsible.address"
         title="Seleccione ubicación en el mapa"
       />
 
