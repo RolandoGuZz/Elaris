@@ -16,4 +16,28 @@ const career = defineCollection({
   }),
 });
 
-export const collections = { career };
+// Colección de secciones generales
+const homeInfo = defineCollection({
+  schema: z.object({
+    title: z.string(),
+    description: z.string().optional(),
+    image: z.string().optional(),
+  }),
+});
+
+// Colección de noticias
+const news = defineCollection({
+  schema: z.object({
+    title: z.string(),
+    cards: z.array(
+      z.object({
+        title: z.string(),
+        subtitle: z.string(),
+        image: z.string(),
+        content: z.string(),
+      })
+    ),
+  }),
+});
+
+export const collections = { career, homeInfo, news };
