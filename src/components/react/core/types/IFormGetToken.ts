@@ -56,7 +56,7 @@ interface Applicant {
   afrodescendant: string;
 }
 
-interface Responsible {
+export interface Responsible {
   name: string;
   lastName: string;
   relationShip: string;
