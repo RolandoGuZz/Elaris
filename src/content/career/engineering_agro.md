@@ -1,5 +1,6 @@
 ---
 name: "Ingeniería en Sistemas Agroalimentarios"
+image: "/src/assets/images/agro.jpg"
 duration: "4 años"
 description: "Carrera de agroooo"
 programDirection: "D.C.H. María del Consuelo Acuayte Valdéz - jefatura.agro@novauniversitas.edu.mx"

@@ -1,5 +1,6 @@
 import { defineCollection, z } from "astro:content";
 
+// Colección de carreras
 const career = defineCollection({
   schema: z.object({
     name: z.string(),
@@ -13,6 +14,7 @@ const career = defineCollection({
     graduateProfile: z.string(),
     professionalField: z.string(),
     studyPlan: z.string(),
+    image: z.string(),
   }),
 });
 
@@ -35,7 +37,7 @@ const news = defineCollection({
         subtitle: z.string(),
         image: z.string(),
         content: z.string(),
-      })
+      }),
     ),
   }),
 });
