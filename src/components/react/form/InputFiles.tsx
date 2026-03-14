@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
-import { useForm, useController, useFormContext, useWatch } from "react-hook-form";
-import type { Path, RegisterOptions } from "react-hook-form";
-import type { IFormGetToken } from "../core/types/IFormGetToken";
+import {
+  useFormContext,
+  useWatch,
+  useController,
+} from "react-hook-form";
+import type { FieldValues, Path, RegisterOptions } from "react-hook-form";
 
-interface PropsInput {
+interface PropsInputFiles<T extends FieldValues> {
   label?: string;
-  name: Path<IFormGetToken>;
-  rules?: RegisterOptions;
+  name: Path<T>;
+  rules?: RegisterOptions<T>;
   typeFiles?: string;
   acceptedTypes?: string;
   maxSizeMB?: number;
@@ -14,15 +17,15 @@ interface PropsInput {
 
 type FileStatus = "idle" | "success" | "error";
 
-export const InputFiles = ({
+export const InputFiles = <T extends FieldValues>({
   label,
   name,
   rules,
   typeFiles,
   acceptedTypes,
   maxSizeMB = 10,
-}: PropsInput) => {
-  const { control } = useFormContext<IFormGetToken>();
+}: PropsInputFiles<T>) => {
+  const { control } = useFormContext<T>();
   const [fileStatus, setFileStatus] = useState<FileStatus>("idle");
   const [fileName, setFileName] = useState<string>("");
 
@@ -32,9 +35,9 @@ export const InputFiles = ({
   });
 
   useEffect(() => {
-    if (formValue instanceof File) {
+    if (formValue && typeof formValue === "object" && "name" in formValue) {
       setFileStatus("success");
-      setFileName(formValue.name);
+      setFileName((formValue as File).name);
     } else if (formValue === null) {
       setFileStatus("idle");
       setFileName("");

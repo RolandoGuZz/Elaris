@@ -1,0 +1,11 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { ValidationForm } from "../components/react/layout/ValidationForm.tsx"
+import NavBar from "../components/NavBar.astro"
+---
+
+<Layout>
+  <NavBar/>
+  <ValidationForm client:only="react" />
+</Layout>
+
