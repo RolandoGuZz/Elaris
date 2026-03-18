@@ -1,0 +1,63 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getEntry, getCollection } from "astro:content";
+
+import CareerHero from "../../components/career/CareerHero.astro";
+import CareerTabs from "../../components/career/CareerTabs.astro";
+import CareerOverview from "../../components/career/CareerOverview.astro";
+import CareerProfessionalField from "../../components/career/CareerProfessionalField.astro";
+import CareerRequirements from "../../components/career/CareerRequirements.astro";
+import CareerSidebar from "../../components/career/CareerSidebar.astro";
+import CareerCurriculum from "../../components/career/CareerCurriculum.astro";
+import CareerGraduateProfile from "../../components/career/CareerGraduateProfile.astro";
+
+export async function getStaticPaths() {
+  const careers = await getCollection("career");
+
+  return careers.map((career) => ({
+    params: { slug: career.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+
+const career = await getEntry("career", slug);
+
+if (!career) {
+  return Astro.redirect("/");
+}
+
+const data = career.data;
+---
+
+<Layout title={data.name}>
+  <main>
+    <CareerHero name={data.name} description={data.description} image={data.heroImage} />
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="flex flex-col lg:flex-row gap-8">
+        <div class="lg:w-2/3 flex flex-col gap-12">
+          <CareerTabs />
+
+          <CareerOverview
+            mission={data.mission}
+            vision={data.vision}
+            objective={data.objective}
+          />
+          <CareerRequirements admissionProfile={data.admissionProfile} />
+          
+          <CareerCurriculum plan={data.studyPlan} />
+          <CareerGraduateProfile graduateProfile={data.graduateProfile} />
+
+          <CareerProfessionalField field={data.professionalField} />
+        </div>
+
+        <CareerSidebar duration={data.duration} programDirection={data.programDirection} />
+      </div>
+    </div>
+
+    <a href="#top" class="fixed bottom-8 right-8 bg-black hover:bg-gray-700 text-white p-3 rounded-full shadow-lg transition">
+      ↑
+    </a>
+  </main>
+</Layout>
