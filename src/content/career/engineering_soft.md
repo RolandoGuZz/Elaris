@@ -79,4 +79,5 @@ studyPlan: |
   Diseño de Experiencia del Usuario   
   Criptografía   
   Emprendimiento de Empresas Emergentes de Software
+heroImage: /ingenieria_software.jpg
 ---
