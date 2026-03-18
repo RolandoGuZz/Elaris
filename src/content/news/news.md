@@ -1,0 +1,20 @@
+---
+title: "Ultimas noticias"
+cards:
+  - title: "NovaUniversitas 2026"
+    subtitle: "Convocatoria de Nuevo Ingreso"
+    image: "https://www.novauniversitas.edu.mx/web/sites/default/files/styles/wide/public/2026-01/ingreso1.png?itok=WQ91qP62"
+    content: "https://www.novauniversitas.edu.mx/web/cultura/publicaciones/boletin_universitario/2026-13-01_ingreso_26"
+  - title: "NOVA Virtual 2026"
+    subtitle: "NovaUniversitas Virtual, educación 100% en línea"
+    image: "https://www.novauniversitas.edu.mx/web/sites/default/files/styles/wide/public/2025-03/nuVirtual.png?itok=Ut7Oiffv"
+    content: "https://www.novauniversitas.edu.mx/web/cultura/publicaciones/boletin_universitario/2025-03-11-novavirtual"
+  - title: "Congreso Estatal"
+    subtitle: "Género, Ciencia, Humanidades, Tecnología e Innovación 2026"
+    image: "https://www.novauniversitas.edu.mx/web/sites/default/files/styles/wide/public/2025-12/la-mujer-la-politica.png?itok=gxDbkNFU"
+    content: "https://www.novauniversitas.edu.mx/web/cultura/publicaciones/boletin_universitario/2025-17-12-congreso_estatal"
+  - title: "Acuerdo Nacional"
+    subtitle: "Para Fortalecer la Formación Profesional, el Conocimiento Tecnológico y la Innovación."
+    image: "https://www.novauniversitas.edu.mx/web/sites/default/files/styles/wide/public/2025-02/portada.png?itok=813Hjdbu"
+    content: "https://www.novauniversitas.edu.mx/web/cultura/publicaciones/boletin_universitario/2025-02-02-acuerdo_nacional"
+---

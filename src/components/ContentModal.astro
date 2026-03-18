@@ -10,25 +10,10 @@ const {
 } = Astro.props;
 ---
 
-<div class="w-full max-w-7xl mx-auto">
-  <div class="bg-white dark:bg-background-dark rounded-xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-800 overflow-hidden">
-
-    {title && (
-      <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-        <h2 class="text-2xl font-bold text-slate-900 dark:text-white">
-          {title}
-        </h2>
-        {description && (
-          <p class="mt-1 text-slate-500 dark:text-slate-400 text-sm">
-            {description}
-          </p>
-        )}
-      </div>
-    )}
-
-    <div class="p-8">
-      <slot />
+<div class="w-full max-w-7xl absolute mx-auto py-2">
+    <div class="">
+      <slot/>
     </div>
-
-  </div>
 </div>
+
+

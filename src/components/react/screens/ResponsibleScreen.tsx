@@ -8,7 +8,7 @@ export const ResponsibleScreen = () => {
     <div className="flex flex-col gap-10">
       <div className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
         <InputText
-          name="responsible.fullName"
+          name="responsible.name"
           label="Nombre completo"
           placeholder="Ingrese nombre completo"
         />
@@ -20,14 +20,13 @@ export const ResponsibleScreen = () => {
         />
       </div>
       <InputSelect
-        name="responsible.relationship"
+        name="responsible.relationShip"
         label="Parentesco"
         options={["Padre", "Madre", "Tutor", "Abuelo/a", "Hermano/a", "Otro"]}
       />
 
       <MapComponent
-        nameLat="responsible.address.lat"
-        nameLng="responsible.address.lng"
+        name="responsible.address"
         title="Seleccione ubicación en el mapa"
       />
 
