@@ -13,6 +13,7 @@ const career = defineCollection({
     graduateProfile: z.string(),
     professionalField: z.string(),
     studyPlan: z.string(),
+    heroImage: z.string(),
   }),
 });
 

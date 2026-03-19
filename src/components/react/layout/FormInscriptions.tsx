@@ -2,15 +2,16 @@ import { useState } from "react";
 import { TitleSection } from "../ui/headers/TitleSection.tsx";
 import FormWizard from "react-form-wizard-component";
 import "react-form-wizard-component/dist/style.css";
-import { STEPS } from "../core/const/steps.ts";
 import { useFormWizard } from "../hooks/useFormWizard.ts";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { formGetTokenSchema } from "../core/validations/FormGetTokenValidations.ts";
 import { Modal } from "../ui/Modal";
+import { STEPS_INSCRIPTIONS } from "../core/const/stepsInscriptions.ts";
+import { formInscriptionSchema } from "../core/validations/FormInscriptionValidations.ts";
 
-export default function FormWizardGetToken() {
+export const FormInscriptions = (props: {}) => {
   const { tabChanged } = useFormWizard();
+  //TODO: separar la logica en un customHook
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     type: "error" | "success";
@@ -24,10 +25,10 @@ export default function FormWizardGetToken() {
   });
 
   const methods = useForm({
-    resolver: zodResolver(formGetTokenSchema),
+    resolver: zodResolver(formInscriptionSchema),
     mode: "onChange",
   });
-
+  //TODO: separa la logica en un customHook
   const handleSubmit = async () => {
     const isValid = await methods.trigger();
     const errors = methods.formState.errors;
@@ -77,8 +78,8 @@ export default function FormWizardGetToken() {
             onComplete={handleSubmit}
             onTabChange={tabChanged}
           >
-            {STEPS.map((step, index) => {
-              const StepComponent = step.component;
+            {STEPS_INSCRIPTIONS.map((step, index) => {
+              const StepComponent = step.componente!;
 
               return (
                 <FormWizard.TabContent
@@ -109,4 +110,4 @@ export default function FormWizardGetToken() {
       />
     </>
   );
-}
+};

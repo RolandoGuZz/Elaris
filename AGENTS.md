@@ -6,6 +6,13 @@
 - **Styling**: Tailwind CSS 4.x (via Vite plugin)
 - **Language**: TypeScript (strict mode via `astro/tsconfigs/strict`)
 - **Package Manager**: npm
+- **Key Dependencies**:
+  - React Hook Form (`react-hook-form@^7.71.2`)
+  - Zod (`zod@^3.25.76`) for validation
+  - `@hookform/resolvers` for Zod integration
+  - react-form-wizard-component for form wizard
+  - leaflet/react-leaflet for maps
+  - swiper for sliders
 
 ## Commands
 
@@ -62,12 +69,18 @@ npx vitest src/components/__tests__/MyComponent.test.tsx
   import type { Path, RegisterOptions } from "react-hook-form";
   ```
 - Avoid `any` - use proper types or `unknown` with type guards
+- Use generic component patterns for reusability:
+  ```tsx
+  export function InputText<T extends FieldValues>({ name }: InputTextProps<T>) {...}
+  ```
 
 ### Component Patterns
 - Use PascalCase for component names: `InputText`, `ApplicantScreen`
-- Use arrow functions for components when no hooks need `this`:
+- Use arrow functions or function declarations for components:
   ```tsx
   export const InputText = ({ label, name }: PropsInput) => { ... }
+  // or
+  export function InputText({ label, name }: PropsInput) { ... }
   ```
 - Default export for page components, named exports for reusable components
 
@@ -85,7 +98,31 @@ npx vitest src/components/__tests__/MyComponent.test.tsx
   ```ts
   name: Path<FormGetToken>
   ```
+- Use `zodResolver` for Zod validation:
+  ```tsx
+  import { zodResolver } from "@hookform/resolvers/zod";
+  const methods = useForm({
+    resolver: zodResolver(formGetTokenSchema),
+    mode: "onChange",
+  });
+  ```
 - Define validation rules with `RegisterOptions`
+
+### Zod Validation
+- Create validation schemas in `src/components/react/core/validations/`
+- Use sub-schemas for nested objects:
+  ```ts
+  const identificationUserSchema = z.object({...});
+  const personalDocumentationSchema = z.object({...});
+  export const formGetTokenSchema = z.object({
+    identification: identificationUserSchema,
+    personalDocumentation: personalDocumentationSchema,
+  });
+  ```
+- Export inferred types:
+  ```ts
+  export type FormGetTokenSchemaType = z.infer<typeof formGetTokenSchema>;
+  ```
 
 ### Tailwind CSS
 - Use Tailwind 4.x syntax (no `var()` in classes - use direct values)
@@ -98,32 +135,40 @@ npx vitest src/components/__tests__/MyComponent.test.tsx
   ```
 
 ### Error Handling
-- Currently: uses `console.log` for debugging
-- For production: implement proper error boundaries and user feedback
-- Validate forms with Zod (already in dependencies: `zod@^3.25.76`)
+- Use Zod for form validation with clear error messages
+- Display validation errors in components:
+  ```tsx
+  {error && (
+    <span className="text-xs text-red-500">{error.message}</span>
+  )}
+  ```
+- Use modal components for form submission feedback
 
 ### Directory Structure
 ```
 src/
 ├── components/react/
 │   ├── core/
-│   │   ├── const/     # Constants (infoStadistic.ts, steps.ts)
-│   │   └── types/     # TypeScript interfaces (FormGetToken.ts)
-│   ├── form/          # Form input components (InputText, InputSelect)
-│   ├── hooks/         # Custom hooks (useFormWizard)
-│   ├── layout/        # Layout components (FormWizardGetToken)
-│   ├── screens/       # Screen/wizard step components
-│   └── ui/            # Reusable UI components
-├── content/           # Astro content collections
-├── layouts/           # Astro layouts
-├── pages/             # Astro pages
-└── styles/            # Global styles
+│   │   ├── const/        # Constants (infoStadistic.ts, steps.ts)
+│   │   ├── types/       # TypeScript interfaces (IFormGetToken.ts)
+│   │   └── validations/  # Zod schemas (FormGetTokenValidations.ts)
+│   ├── form/            # Form input components (InputText, InputSelect)
+│   ├── hooks/           # Custom hooks (useFormWizard)
+│   ├── layout/          # Layout components (FormWizardGetToken)
+│   ├── screens/         # Screen/wizard step components
+│   │   └── Inscriptions/
+│   └── ui/             # Reusable UI components (Modal)
+├── content/             # Astro content collections
+├── layouts/             # Astro layouts
+├── pages/               # Astro pages
+└── styles/             # Global styles
 ```
 
 ### File Naming
 - Components: `PascalCase.tsx` (e.g., `InputText.tsx`)
 - Utils/hooks: `kebab-case.ts` (e.g., `use-form-wizard.ts`)
-- Types: `kebab-case.ts` (e.g., `form-get-token.ts`)
+- Types: `PascalCase.ts` (e.g., `IFormGetToken.ts`)
+- Validations: `PascalCaseValidations.ts` (e.g., `FormGetTokenValidations.ts`)
 - Constants: `kebab-case.ts` (e.g., `info-stadistic.ts`)
 
 ### Astro-Specific
@@ -142,4 +187,4 @@ src/
 - No ESLint/Prettier configured
 - No test framework
 - No error boundaries
-- Some interfaces have inconsistent naming (`personalDocumentation` vs `Applicant`)
+- Some interfaces have inconsistent naming
