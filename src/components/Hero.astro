@@ -1,54 +1,86 @@
 ---
-import Layout from "../layouts/Layout.astro";
 import { getCollection } from "astro:content";
 const homeInfo = await getCollection("homeInfo");
 const hero = homeInfo.find((s) => s.slug === "heroinfo");
 ---
 
-<Layout title="University Programs | NovaUniversitas">
-  <section class="relative min-h-[85vh] flex items-center overflow-hidden">
-    <div class="absolute inset-0 z-0">
-      <div
-        class="absolute inset-0 bg-linear-to-r from-white via-white/70 to-transparent z-10">
-      </div>
-      <div
-        class="w-full h-full bg-cover bg-center"
-        style={`background-image: url('${hero?.data.image}')`}>
+<section class="relative min-h-[85vh] flex items-center overflow-hidden">
+  <div class="absolute inset-0 z-0">
+    <div
+      class="absolute inset-0 bg-linear-to-r from-white via-white/70 to-transparent z-10">
+    </div>
+    <img
+      src={hero?.data.image}
+      alt=""
+      role="img"
+      aria-label="Campus de NovaUniversitas"
+      class="w-full h-full object-cover"
+      loading="lazy"
+    />
+  </div>
+  <div class="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    <div class="max-w-2xl">
+      <span
+        class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1D7B43]/10 text-[#1D7B43] text-xs font-bold tracking-widest uppercase mb-6">
+        <span class="w-2 h-2 rounded-full bg-[#1D7B43]"></span>
+        NovaUniversitas
+      </span>
+      <h1
+        class="text-5xl md:text-6xl font-black text-gray-900 mb-8 leading-tight">
+        {hero?.data.title}
+      </h1>
+      <p
+        class="text-lg md:text-xl text-slate-600 max-w-2xl mb-10 leading-relaxed">
+        {hero?.data.description}
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a
+          href="/FormGetToken"
+          class="px-5 py-2.5 bg-[#1D7B43] text-white font-bold rounded-lg hover:bg-[#155f32] transition-all shadow-md flex items-center gap-2">
+          Obtener Ficha
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+          </svg>
+        </a>
+        <a
+          href="https://www.novauniversitas.edu.mx/web/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="px-5 py-2.5 bg-white border-2 border-gray-200 text-gray-900 font-bold rounded-lg hover:bg-gray-50 transition-all flex items-center gap-2">
+          Visitar sitio
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+            ></path>
+          </svg>
+        </a>
       </div>
     </div>
-
-    <div class="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-      <div class="max-w-2xl">
-        <span
-          class="inline-block py-1 px-3 rounded bg-[#1D7B43]/10 text-[#1D7B43] text-xs font-bold tracking-widest uppercase mb-6">
-          NovaUniversitas
-        </span>
-        <h1 class="text-5xl md:text-7xl font-black text-gray-900 mb-8">
-          {hero?.data.title}
-        </h1>
-        <p
-          class="text-lg md:text-xl text-slate-600 max-w-2xl mb-10 leading-relaxed">
-          {hero?.data.description}
-        </p>
-        <div class="flex flex-col sm:flex-row gap-4">
-          <a
-            href="/FormGetToken"
-            class="px-4 py-2 bg-[#1D7B43] text-white font-bold text-lg hover:bg-[#155f32] transition-all shadow-xl shadow-[#1D7B43]/30 flex items-center justify-center gap-2">
-              Obtener Ficha
-          </a>
-          <a
-            href="https://www.novauniversitas.edu.mx/web/"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="px-4 py-2 bg-white border border-slate-200 text-gray-900 font-bold text-lg hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
-            Pagina NovaUniversitas
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce text-slate-400 text-4xl">
-      ⌄
-    </div>
-  </section>
-</Layout>
+  </div>
+  <div
+    class="absolute bottom-8 left-1/2 -translate-x-1/2 text-gray-400 animate-bounce"
+    aria-hidden="true">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+    </svg>
+  </div>
+</section>
