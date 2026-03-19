@@ -1,0 +1,57 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { getCollection } from "astro:content";
+const newsCollection = await getCollection("news");
+const newsData = newsCollection[0];
+---
+
+<Layout title="Noticias | NovaUniversitas">
+  <section class="py-24 bg-white">
+    <div class="max-w-6xl mx-auto px-8 sm:px-12 lg:px-16">
+      <div
+        class="flex flex-col md:flex-row justify-start items-end mb-12 gap-6">
+        <div>
+          <h1 class="text-4xl font-black text-slate-900">
+            {newsData?.data.title}
+          </h1>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-4 gap-10">
+        {
+          newsData?.data.cards.map((card: any) => (
+            <article class="flex flex-col">
+              <a
+                href={card.content}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="aspect-video rounded-xl mb-6 overflow-hidden bg-slate-200 block">
+                <img
+                  src={card.image}
+                  alt={card.title}
+                  class="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                />
+              </a>
+              <h3 class="text-xl font-bold text-slate-900 mb-2 leading-snug hover:text-[#1D7B43] transition-colors">
+                <a
+                  href={card.content}
+                  target="_blank"
+                  rel="noopener noreferrer">
+                  {card.title}
+                </a>
+              </h3>
+              <p class="text-slate-600 text-sm line-clamp-2">{card.subtitle}</p>
+              <a
+                href={card.content}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="mt-4 text-[#1D7B43] text-sm font-bold hover:underline">
+                Leer más →
+              </a>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</Layout>
