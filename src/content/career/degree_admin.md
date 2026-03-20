@@ -73,4 +73,5 @@ studyPlan: |
   Internacionalización de MIPyMES
   Gestión del Cambio Organizacional
   Auditoría Administrativa
+heroImage: /mipymes.jpg
 ---

@@ -7,14 +7,14 @@ interface Props {
 
 const { career } = Astro.props;
 const { data } = career;
-const slug = career.id.replace(/\.md$/, "");
+const slug = career.slug;
 ---
 
 <article
   class="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 flex flex-col h-full border border-gray-100"
 >
   <div
-    class="relative h-52 overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100"
+    class="relative h-52 overflow-hidden bg-gradient-to-br from-[#1D7B43]/20 to-[#155f32]/20"
   >
     {
       data.image ? (
@@ -24,7 +24,7 @@ const slug = career.id.replace(/\.md$/, "");
           class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
       ) : (
-        <div class="w-full h-full flex items-center justify-center text-6xl bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+        <div class="w-full h-full flex items-center justify-center text-6xl bg-gradient-to-br from-[#1D7B43] to-[#155f32] text-white">
           {data.name.charAt(0)}
         </div>
       )
@@ -54,7 +54,7 @@ const slug = career.id.replace(/\.md$/, "");
     </p>
 
     <a
-      href={`/career/${slug}`}
+      href={`/catalog/${slug}`}
       class="mt-auto inline-flex items-center justify-between w-full px-4 py-3 bg-gradient-to-r from-[#1D7B43] to-[#155f32] text-white font-bold text-lg rounded-xl hover:from-[#155f32] hover:to-[#0e4a26] transition-all duration-300 group/btn shadow-xl shadow-[#1D7B43]/30"
     >
       <span>View Details</span>

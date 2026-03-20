@@ -66,4 +66,5 @@ studyPlan: |
   Fisiología y Tecnología Postcosecha
   Tecnología de Productos Pecuarios
   Sistemas Productivos y Cadenas de Valor
+heroImage: /agroalimentos.jpg
 ---
