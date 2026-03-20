@@ -1,5 +1,6 @@
 ---
 name: "Licenciatura en Emprendimiento y Desarrollo de MIPyMES"
+image: "/src/assets/images/admin.jpg"
 duration: "4 años"
 description: "Adminnnn"
 programDirection: "M.E.A. Elizabeth Ojeda V. - jefatura.admon@novauniversitas.edu.mx"

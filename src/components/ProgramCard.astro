@@ -7,26 +7,60 @@ interface Props {
 
 const { career } = Astro.props;
 const { data } = career;
+const slug = career.slug;
 ---
 
 <article
-  class="border border-gray-200 rounded-xl p-6 bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-200 h-full flex flex-col"
+  class="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 flex flex-col h-full border border-gray-100"
 >
-  <h3 class="text-xl font-semibold text-gray-900 mb-3">
-    {data.name}
-  </h3>
-
-  <p class="text-gray-600 leading-relaxed mb-6 flex-1">
-    {data.description}
-  </p>
-
-  <a
-    href={`/catalog/${career.slug}`}
-    class="text-blue-600 font-medium inline-flex items-center gap-2 border-t border-gray-100 pt-4 mt-auto hover:text-blue-700 group"
+  <div
+    class="relative h-52 overflow-hidden bg-gradient-to-br from-[#1D7B43]/20 to-[#155f32]/20"
   >
-    View Details
-    <span class="transform group-hover:translate-x-1 transition-transform"
-      >→</span
+    {
+      data.image ? (
+        <img
+          src={data.image}
+          alt={data.name}
+          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+        />
+      ) : (
+        <div class="w-full h-full flex items-center justify-center text-6xl bg-gradient-to-br from-[#1D7B43] to-[#155f32] text-white">
+          {data.name.charAt(0)}
+        </div>
+      )
+    }
+
+    <div
+      class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
     >
-  </a>
+    </div>
+
+    <div
+      class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-gray-700 shadow-lg"
+    >
+      🕒 {data.duration}
+    </div>
+  </div>
+
+  <div class="p-6 flex-1 flex flex-col">
+    <h3
+      class="text-2xl font-bold text-gray-900 mb-3 group-hover:text-[#1D7B43] transition-colors"
+    >
+      {data.name}
+    </h3>
+
+    <p class="text-gray-600 leading-relaxed mb-4 line-clamp-3">
+      {data.description}
+    </p>
+
+    <a
+      href={`/catalog/${slug}`}
+      class="mt-auto inline-flex items-center justify-between w-full px-4 py-3 bg-gradient-to-r from-[#1D7B43] to-[#155f32] text-white font-bold text-lg rounded-xl hover:from-[#155f32] hover:to-[#0e4a26] transition-all duration-300 group/btn shadow-xl shadow-[#1D7B43]/30"
+    >
+      <span>View Details</span>
+      <span class="transform group-hover/btn:translate-x-1 transition-transform"
+        >→</span
+      >
+    </a>
+  </div>
 </article>
