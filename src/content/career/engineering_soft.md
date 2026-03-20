@@ -1,6 +1,6 @@
 ---
 name: "Ingeniería en Desarrollo de Software"
-image: "/src/assets/images/soft.jpg"
+image: "/ingenieria_software.jpg"
 duration: "4 años"
 description: "Los de info pa"
 programDirection: "M.T.C.A. Rosa María Gutiérrez A. - jefatura.info@novauniversitas.edu.mx"
