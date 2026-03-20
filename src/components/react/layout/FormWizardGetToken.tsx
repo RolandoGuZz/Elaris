@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { TitleSection } from "../ui/headers/TitleSection.tsx";
-import FormWizard from "react-form-wizard-component";
+import FormWizard, { TabContent } from "react-form-wizard-component";
 import "react-form-wizard-component/dist/style.css";
 import { STEPS } from "../core/const/steps.ts";
 import { useFormWizard } from "../hooks/useFormWizard.ts";
@@ -81,7 +81,7 @@ export default function FormWizardGetToken() {
               const StepComponent = step.component;
 
               return (
-                <FormWizard.TabContent
+                <TabContent
                   key={index}
                   title={step.title}
                   icon={step.icon}
@@ -90,7 +90,7 @@ export default function FormWizardGetToken() {
                     <TitleSection title={step.title} subtitle={step.subtitle} />
                     <StepComponent />
                   </div>
-                </FormWizard.TabContent>
+                </TabContent>
               );
             })}
           </FormWizard>
