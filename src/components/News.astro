@@ -1,0 +1,40 @@
+---
+import { getCollection } from "astro:content";
+const newsCollection = await getCollection("news");
+const newsData = newsCollection[0];
+---
+<section class="py-24 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-8">
+    <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+      <div>
+        <h2 class="text-4xl font-bold text-gray-900 relative inline-block">
+          {newsData?.data.title}
+          <span class="absolute -bottom-2 left-0 w-16 h-1 bg-[#1D7B43]"></span>
+        </h2>
+      </div>
+    </div>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-12">
+      {
+        newsData?.data.cards.map((card: any) => (
+          <article class="flex flex-col">
+            <a class="block mb-4 overflow-hidden rounded-lg" href={card.content} target="_blank" rel="noopener noreferrer">
+              <img
+                src={card.image}
+                alt={card.title}
+                class="w-full h-48 object-cover hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+                width="400"
+                height="192"
+              />
+            </a>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">{card.title}</h3>
+            <p class="text-gray-500 text-sm mb-4">{card.subtitle}</p>
+            <a class="text-[#1D7B43] text-sm font-semibold" href={card.content} target="_blank" rel="noopener noreferrer">
+              Leer más →
+            </a>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>

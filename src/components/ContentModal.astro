@@ -1,0 +1,19 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { 
+  title = "", 
+  description = "" 
+} = Astro.props;
+---
+
+<div class="w-full max-w-7xl absolute mx-auto py-2">
+    <div class="">
+      <slot/>
+    </div>
+</div>
+
+

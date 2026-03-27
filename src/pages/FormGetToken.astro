@@ -1,0 +1,16 @@
+---
+import Layout from "../layouts/Layout.astro"
+import ContentModal from '../components/ContentModal.astro';
+import FormWizardGetToken from "../components/react/layout/FormWizardGetToken";
+import NavBar from '../components/NavBar.astro'
+---
+
+<Layout title='obtenerFicha' >
+  <NavBar  />
+  <div class="w-full flex justify-center mt-10" >
+    <ContentModal title="Obtener ficha" description="Completa los pasos para generar tu ficha de adminision">
+      <FormWizardGetToken client:only='react'/>
+    </ContentModal>
+  </div>
+ </Layout>
+

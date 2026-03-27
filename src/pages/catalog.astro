@@ -1,9 +1,39 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
+import ProgramCard from "../components/ProgramCard.astro";
+import { getCollection } from "astro:content";
+import NavBar from "../components/NavBar.astro";
+
+const careers = await getCollection("career");
 ---
 
-<Layout>
-Pagina de los catalogos de la universidad
+<Layout title="University Programs | Elaris">
+  <NavBar />
+  <main class="max-w-7xl mx-auto px-4 py-12">
+    <div class="text-center mb-16">
+      <div
+        class="inline-flex items-center gap-2 bg-gradient-to-r from-[#1D7B43] to-[#155f32] text-white px-6 py-2 rounded-full text-sm font-medium mb-6"
+      >
+        <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+        {careers.length} Carreras Disponibles
+      </div>
+
+      <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+        Encuentra Tu
+        <span
+          class="bg-gradient-to-r from-[#1D7B43] to-[#155f32] bg-clip-text text-transparent"
+        >
+          Futuro</span
+        >
+      </h1>
+
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+        Descubre la carrera que te llevará al siguiente nivel
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {careers.map((career) => <ProgramCard career={career} />)}
+    </div>
+  </main>
 </Layout>
-
-

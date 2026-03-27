@@ -10,12 +10,24 @@
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
+    "@hookform/resolvers": "^5.2.2",
+    "@react-google-maps/api": "^2.20.8",
     "@tailwindcss/vite": "^4.2.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "astro": "^5.17.1",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "tailwindcss": "^4.2.1"
+    "leaflet": "^1.9.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-form-wizard-component": "^1.0.1",
+    "react-hook-form": "^7.71.2",
+    "react-icons": "^5.5.0",
+    "react-leaflet": "^4.2.1",
+    "swiper": "^12.1.2",
+    "tailwindcss": "^4.2.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.21"
   }
 }
