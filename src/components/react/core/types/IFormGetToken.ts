@@ -13,6 +13,8 @@ interface IdentificationUser {
   address: ICordinates;
   phone: string;
   email: string;
+  career: string;
+  campus: string;
   bloodType: string;
   medicalConditions: string;
   allergies: string;
