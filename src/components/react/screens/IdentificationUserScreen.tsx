@@ -24,7 +24,6 @@ export const IdentificationUserScreen = () => {
           name="identification.age"
           type="number"
           placeholder="e.g. 18"
-          rules={{ valueAsNumber: true }}
         />
 
         <InputText
@@ -38,7 +37,8 @@ export const IdentificationUserScreen = () => {
         <InputText
           label="Telefono"
           name="identification.phone"
-          placeholder="e.g. 555-123-4567"
+          type="number"
+          placeholder="e.g. 5551234567"
         />
         <InputText
           label="Correo electronico"

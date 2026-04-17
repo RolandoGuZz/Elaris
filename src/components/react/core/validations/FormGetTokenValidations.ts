@@ -22,17 +22,24 @@ const coordinatesSchema = z.object({
 /* ---------------- IDENTIFICACIÓN ---------------- */
 
 const identificationUserSchema = z.object({
-  firstName: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+  firstName: z
+    .string()
+    .min(2, "El nombre debe tener al menos 2 caracteres")
+    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "No se permiten números"),
 
-  lastName: z.string().min(2, "El apellido debe tener al menos 2 caracteres"),
+  lastName: z
+    .string()
+    .min(2, "El apellido debe tener al menos 2 caracteres")
+    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "No se permiten números"),
 
   age: z
-    .number({
-      required_error: "La edad es obligatoria",
-      invalid_type_error: "Solo se aceptan numeros",
-    })
-    .min(17, "Debes tener almenos 17 años")
-    .max(70, "Superas el limite de edad"),
+    .string()
+    .min(1, "La edad es obligatoria")
+    .regex(/^[0-9]+$/, "Solo se permiten números")
+    .transform((val) => Number(val))
+    .pipe(
+      z.number().min(17, "Debes tener almenos 17 años").max(70, "Superas el limite de edad")
+    ),
 
   birthDate: z.string().min(1, "La fecha de nacimiento es obligatoria"),
 
@@ -73,12 +80,13 @@ const personalDocumentationSchema = z.object({
 /* ---------------- ESCUELA ---------------- */
 
 const schoolSchema = z.object({
-  name: z.string().min(2, "El nombre de la escuela es obligatorio"),
-
+  name: z
+    .string()
+    .trim()
+    .min(2, "El nombre debe tener al menos 2 caracteres")
+    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "No se permiten números en este campo"),
   location: coordinatesSchema,
-
   knowledgeArea: z.string().min(1, "Selecciona un área de conocimiento"),
-
   enrollmentYear: z
     .number({
       required_error: "El año de ingreso es obligatorio",
@@ -148,9 +156,15 @@ const applicantSchema = z.object({
 /* ---------------- RESPONSABLE ---------------- */
 
 const responsibleSchema = z.object({
-  name: z.string().min(2, "El nombre es obligatorio"),
+  name: z
+    .string()
+    .min(2, "El nombre es obligatorio")
+    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "No se permiten números"),
 
-  lastName: z.string().min(2, "El apellido es obligatorio"),
+  lastName: z
+    .string()
+    .min(2, "El apellido es obligatorio")
+    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "No se permiten números"),
 
   relationShip: z.string().min(1, "Selecciona el parentesco"),
 
