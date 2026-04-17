@@ -40,8 +40,8 @@ export const ResponsibleScreen = () => {
         <InputText
           name="responsible.phone"
           label="Teléfono"
-          type="tel"
-          placeholder="Ej. 55 1234 5678"
+          type="number"
+          placeholder="Ej. 5512345678"
         />
       </div>
     </div>

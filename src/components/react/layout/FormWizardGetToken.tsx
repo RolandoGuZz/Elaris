@@ -81,11 +81,7 @@ export default function FormWizardGetToken() {
               const StepComponent = step.component;
 
               return (
-                <TabContent
-                  key={index}
-                  title={step.title}
-                  icon={step.icon}
-                >
+                <TabContent key={index} title={step.title} icon={step.icon}>
                   <div className="p-10 w-full rounded-xl shadow-xl dark:shadow-none border border-slate-200 dark:border-slate-800 overflow-hidden">
                     <TitleSection title={step.title} subtitle={step.subtitle} />
                     <StepComponent />

@@ -27,6 +27,22 @@ export function InputText<T extends FieldValues>({
 
   const error = getError(errors, name as string);
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (type === "number") {
+      const allowedKeys = ["Backspace", "Delete", "Tab", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"];
+      if (!allowedKeys.includes(e.key) && !/^[0-9]$/.test(e.key)) {
+        e.preventDefault();
+      }
+    }
+  };
+
+  const handleInput = (e: React.FormEvent<HTMLInputElement>) => {
+    if (type === "number") {
+      const value = e.currentTarget.value;
+      e.currentTarget.value = value.replace(/[^0-9]/g, "");
+    }
+  };
+
   return (
     <div className="flex flex-col gap-2 w-full">
       {label && (
@@ -43,6 +59,8 @@ export function InputText<T extends FieldValues>({
         type={type}
         placeholder={placeholder}
         {...register(name as Path<T>, rules)}
+        onInput={handleInput}
+        onKeyDown={handleKeyDown}
         className={` text-left
           w-full px-4 py-2.5 rounded-lg border
           bg-white text-slate-900 placeholder-slate-400 shadow-sm
