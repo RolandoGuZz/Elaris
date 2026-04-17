@@ -1,7 +1,11 @@
 import { InputText } from "../form/InputText";
+import { InputSelect } from "../form/InputSelect";
 import { SelectSex } from "../form/SelectSex";
 import { SelectState } from "../form/SelectState";
 import { MapComponent } from "../layout/MapComponent";
+
+const CAREER_OPTIONS = ["Ingeniería de Software", "Administración", "Agronomía"];
+const CAMPUS_OPTIONS = ["Nopala", "Juxtlahuaca", "San Jacinto"];
 
 export const IdentificationUserScreen = () => {
   return (
@@ -45,6 +49,16 @@ export const IdentificationUserScreen = () => {
           name="identification.email"
           type="email"
           placeholder="ejemplo@email.com"
+        />
+        <InputSelect
+          label="Selecciona la carrera a la que quieres entrar"
+          name="identification.career"
+          options={CAREER_OPTIONS}
+        />
+        <InputSelect
+          label="Campus"
+          name="identification.campus"
+          options={CAMPUS_OPTIONS}
         />
         <SelectSex label="Sexo" name="identification.gender" />
         <SelectState label="Estado Civil" name="identification.maritalStatus" />

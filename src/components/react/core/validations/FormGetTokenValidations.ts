@@ -53,6 +53,9 @@ const identificationUserSchema = z.object({
 
   email: z.string().email("Correo electrónico inválido"),
 
+  career: z.string().min(1, "Selecciona una carrera"),
+  campus: z.string().min(1, "Selecciona un campus"),
+
   //bloodType: z.string().min(1, "Selecciona un tipo de sangre"),
 
   medicalConditions: z.string().optional(),
