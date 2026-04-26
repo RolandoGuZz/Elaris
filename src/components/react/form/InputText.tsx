@@ -7,6 +7,13 @@ interface InputTextProps<T extends FieldValues> {
   type?: string;
   placeholder?: string;
   rules?: RegisterOptions<T>;
+  max?: string;
+  min?: string;
+  maxLength?: number;
+  transformUppercase?: boolean;
+  step?: number | string;
+  inputMode?: "decimal" | "numeric";
+  allowDecimal?: boolean;
 }
 
 export function InputText<T extends FieldValues>({
@@ -15,6 +22,13 @@ export function InputText<T extends FieldValues>({
   type = "text",
   placeholder,
   rules,
+  max,
+  min,
+  maxLength,
+  transformUppercase = false,
+  step,
+  inputMode,
+  allowDecimal = false,
 }: InputTextProps<T>) {
   const {
     register,
@@ -30,6 +44,14 @@ export function InputText<T extends FieldValues>({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (type === "number") {
       const allowedKeys = ["Backspace", "Delete", "Tab", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"];
+
+      if (allowDecimal && e.key === ".") {
+        if (e.currentTarget.value.includes(".")) {
+          e.preventDefault();
+        }
+        return;
+      }
+
       if (!allowedKeys.includes(e.key) && !/^[0-9]$/.test(e.key)) {
         e.preventDefault();
       }
@@ -39,7 +61,29 @@ export function InputText<T extends FieldValues>({
   const handleInput = (e: React.FormEvent<HTMLInputElement>) => {
     if (type === "number") {
       const value = e.currentTarget.value;
-      e.currentTarget.value = value.replace(/[^0-9]/g, "");
+      if (allowDecimal) {
+        let sanitized = value.replace(/[^0-9.]/g, "");
+        const dotIndex = sanitized.indexOf(".");
+        if (dotIndex !== -1) {
+          sanitized =
+            sanitized.slice(0, dotIndex + 1) +
+            sanitized
+              .slice(dotIndex + 1)
+              .replace(/\./g, "");
+        }
+        e.currentTarget.value = sanitized;
+      } else {
+        e.currentTarget.value = value.replace(/[^0-9]/g, "");
+      }
+    }
+
+    if (transformUppercase) {
+      const value = e.currentTarget.value;
+      const sanitized = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const limited = typeof maxLength === "number" ? sanitized.slice(0, maxLength) : sanitized;
+      if (limited !== value) {
+        e.currentTarget.value = limited;
+      }
     }
   };
 
@@ -61,6 +105,11 @@ export function InputText<T extends FieldValues>({
         {...register(name as Path<T>, rules)}
         onInput={handleInput}
         onKeyDown={handleKeyDown}
+        max={max}
+        min={min}
+        maxLength={type === "number" ? undefined : maxLength}
+        step={type === "number" ? step : undefined}
+        inputMode={inputMode}
         className={` text-left
           w-full px-4 py-2.5 rounded-lg border
           bg-white text-slate-900 placeholder-slate-400 shadow-sm

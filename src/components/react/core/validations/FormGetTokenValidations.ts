@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { required } from "zod/v4-mini";
+import { birthDateSchema } from "./utils/birthDate";
+import { curpSchema, validateCurpStructure } from "./utils/curp";
+import { restrictedEmailSchema } from "./utils/email";
 
 /* ---------------- COORDENADAS ---------------- */
 
@@ -19,6 +21,12 @@ const coordinatesSchema = z.object({
     .max(180, "Longitud inválida"),
 });
 
+const mapGenderToCurpCode = (value: string) => {
+  if (value === "Masculino") return "H" as const;
+  if (value === "Femenino") return "M" as const;
+  return null;
+};
+
 /* ---------------- IDENTIFICACIÓN ---------------- */
 
 const identificationUserSchema = z.object({
@@ -32,16 +40,9 @@ const identificationUserSchema = z.object({
     .min(2, "El apellido debe tener al menos 2 caracteres")
     .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "No se permiten números"),
 
-  age: z
-    .string()
-    .min(1, "La edad es obligatoria")
-    .regex(/^[0-9]+$/, "Solo se permiten números")
-    .transform((val) => Number(val))
-    .pipe(
-      z.number().min(17, "Debes tener almenos 17 años").max(70, "Superas el limite de edad")
-    ),
+  birthDate: birthDateSchema,
 
-  birthDate: z.string().min(1, "La fecha de nacimiento es obligatoria"),
+  curp: curpSchema,
 
   gender: z.string().min(1, "Debes seleccionar un género"),
 
@@ -51,109 +52,135 @@ const identificationUserSchema = z.object({
 
   phone: z.string().regex(/^[0-9]{10}$/, "El teléfono debe tener 10 dígitos"),
 
-  email: z.string().email("Correo electrónico inválido"),
+  email: restrictedEmailSchema,
 
   career: z.string().min(1, "Selecciona una carrera"),
   campus: z.string().min(1, "Selecciona un campus"),
+}).superRefine((data, ctx) => {
+  const curpResult = validateCurpStructure(data.curp);
+  if (!curpResult.success) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["curp"],
+      message: curpResult.message,
+    });
+    return;
+  }
 
-  //bloodType: z.string().min(1, "Selecciona un tipo de sangre"),
+  if (curpResult.birthDate !== data.birthDate) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["curp"],
+      message: "La fecha de nacimiento no coincide con la CURP",
+    });
+  }
 
-  medicalConditions: z.string().optional(),
+  const genderCode = mapGenderToCurpCode(data.gender);
+  if (!genderCode) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["gender"],
+      message: "Selecciona un sexo compatible con la CURP (Masculino o Femenino)",
+    });
+    return;
+  }
 
-  allergies: z.string().optional(),
-
-  medications: z.string().optional(),
+  if (genderCode !== curpResult.gender) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["curp"],
+      message: "El sexo seleccionado no coincide con la CURP",
+    });
+  }
 });
 
 /* ---------------- DOCUMENTOS ---------------- */
 
-const fileSchema = z
-  .instanceof(File)
-  .nullable()
-  .refine((file) => file !== null, "El archivo es obligatorio");
+const fileOrUrlSchema = z.union([z.instanceof(File), z.string().url()]);
 
 const personalDocumentationSchema = z.object({
-  birthCertificate: fileSchema,
-  //highSchoolCertificate: fileSchema,
-  highSchoolProof: fileSchema,
-  curp: fileSchema,
-  photos: fileSchema,
+  birthCertificate: fileOrUrlSchema,
+  highSchoolProof: fileOrUrlSchema,
+  curp: fileOrUrlSchema,
+  photos: fileOrUrlSchema,
 });
 
 /* ---------------- ESCUELA ---------------- */
 
-const schoolSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(2, "El nombre debe tener al menos 2 caracteres")
-    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "No se permiten números en este campo"),
-  location: coordinatesSchema,
-  knowledgeArea: z.string().min(1, "Selecciona un área de conocimiento"),
-  enrollmentYear: z
-    .number({
-      required_error: "El año de ingreso es obligatorio",
-      invalid_type_error: "Solo se aceptan numeros",
-    })
-    .min(1980, "Año inválido")
-    .max(new Date().getFullYear()),
+const schoolSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(2, "El nombre debe tener al menos 2 caracteres")
+      .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s]+$/, "Solo se permiten letras y números"),
+    location: coordinatesSchema,
+    knowledgeArea: z
+      .string()
+      .trim()
+      .min(1, "Selecciona un área de conocimiento")
+      .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "Solo se permiten letras"),
+    enrollmentYear: z
+      .number({
+        required_error: "El año de ingreso es obligatorio",
+        invalid_type_error: "Solo se aceptan numeros",
+      })
+      .min(1980, "Año inválido")
+      .max(new Date().getFullYear()),
 
-  graduationYear: z
-    .number({
-      required_error: "El año de egreso es obligatorio",
-      invalid_type_error: "Solo se aceptan numeros",
-    })
-    .min(1980, "Año inválido")
-    .max(new Date().getFullYear()),
+    graduationYear: z
+      .number({
+        required_error: "El año de egreso es obligatorio",
+        invalid_type_error: "Solo se aceptan numeros",
+      })
+      .min(1980, "Año inválido")
+      .max(new Date().getFullYear()),
 
-  finalAverage: z
-    .number({
-      required_error: "El promedio es obligatorio",
-      message: "Solo se aceptan numero",
-    })
-    .min(0, "Promedio inválido")
-    .max(10, "El promedio máximo es 10"),
+    finalAverage: z
+      .number({
+        required_error: "El promedio es obligatorio",
+        message: "Solo se aceptan numero",
+      })
+      .min(0, "Promedio inválido")
+      .max(10, "El promedio máximo es 10"),
 
-  certificateFolio: z
-    .string()
-    .min(1, "El folio del certificado es obligatorio")
-    .optional(),
-
-  schoolType: z.string().min(1, "Selecciona un tipo de escuela"),
-
-  certificate: z.instanceof(File).optional(),
-});
+    schoolType: z.string().min(1, "Selecciona un tipo de escuela"),
+  })
+  .superRefine((data, ctx) => {
+    const { enrollmentYear, graduationYear } = data;
+    if (graduationYear - enrollmentYear < 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["graduationYear"],
+        message: "El año de egreso debe ser al menos 3 años posterior al de ingreso",
+      });
+    }
+  });
 
 /* ---------------- ASPIRANTE ---------------- */
 
 const applicantSchema = z.object({
   bloodType: z.string().min(1, "Selecciona un tipo de sangre"),
 
+  hasDiseases: z.boolean().default(false),
   diseases: z.array(z.string()).min(0).optional(),
 
-  diseasesDetails: z.string().optional(),
-
+  hasAllergies: z.boolean().default(false),
   allergies: z.array(z.string()).min(0).optional(),
 
-  allergiesDetails: z.string().optional(),
-
-  specialMedications: z.array(z.string()).min(0).optional(),
-
+  takesSpecialMedications: z.boolean().default(false),
   medicationsDetails: z.array(z.string()).min(0).optional(),
 
+  hasDisability: z.boolean().default(false),
   disability: z.array(z.string()).min(0).optional(),
 
-  disabilityDetails: z.string().optional(),
-
+  isIndigenous: z.boolean().default(false),
   indigenous: z.array(z.string()).min(0).optional(),
 
-  ethnicGroup: z.string().optional(),
-
-  indigenousLanguage: z.string().optional(),
-
+  speaksIndigenousLanguage: z.boolean().default(false),
   languageDetails: z.array(z.string()).min(0).optional(),
 
-  afrodescendant: z.string().min(1, "Debes seleccionar una opción").optional(),
+  afrodescendant: z.string().min(1, "Debes seleccionar una opción"),
 });
 
 /* ---------------- RESPONSABLE ---------------- */
@@ -168,6 +195,8 @@ const responsibleSchema = z.object({
     .string()
     .min(2, "El apellido es obligatorio")
     .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "No se permiten números"),
+
+  birthDate: birthDateSchema,
 
   relationShip: z.string().min(1, "Selecciona el parentesco"),
 

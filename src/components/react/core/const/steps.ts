@@ -68,10 +68,10 @@ export const STEPS_INSCRIPTIONS: FormField[] = [
     component: "InputText",
   },
   {
-    name: "responsible.relationShip",
-    label: "Parentesco *",
-    component: "InputSelect",
-    options: OPTIONS_RELATIONSHIP,
+    name: "responsible.birthDate",
+    label: "Fecha de nacimiento *",
+    component: "InputText",
+    type: "date",
   },
   {
     name: "responsible.phone",
@@ -91,5 +91,11 @@ export const STEPS_INSCRIPTIONS: FormField[] = [
     label: "Ocupación *",
     placeholder: "Ingeniero",
     component: "InputText",
+  },
+  {
+    name: "responsible.relationShip",
+    label: "Parentesco *",
+    component: "InputSelect",
+    options: OPTIONS_RELATIONSHIP,
   },
 ];

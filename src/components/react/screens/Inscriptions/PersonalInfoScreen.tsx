@@ -1,5 +1,7 @@
 import { InputText } from "../../form/InputText";
 import imgPersonal from "../../../../assets/images/Personal data-bro.svg";
+import { normalizeCurp } from "../../core/validations/utils/curp";
+import { CURP_REGEX } from "../../core/validations/utils/curp";
 
 export const PersonalInfo = () => {
   return (
@@ -15,14 +17,37 @@ export const PersonalInfo = () => {
         <div className="flex-1 p-6 md:p-10">
           <form className="space-y-6">
             <InputText
-              name="personalInfo.curp"
-              label="CURP *"
-              placeholder="Ingresa los 18 caracteres de la CURP"
-            />
-            <InputText
               name="personalInfo.birthCertificate"
               label="Folio del acta de nacimiento *"
               placeholder="Ej. 123456789"
+              transformUppercase
+              maxLength={20}
+              rules={{
+                required: "Ingresa el folio del acta",
+                validate: (value: string) => {
+                  const normalized = value.trim().toUpperCase();
+                  return /^[A-Z0-9]{8,20}$/.test(normalized)
+                    ? true
+                    : "El folio de acta de nacimiento no es válido. Debe contener solo letras mayúsculas y números, con 8 a 20 caracteres.";
+                },
+              }}
+            />
+
+            <InputText
+              name="personalInfo.curp"
+              label="CURP *"
+              placeholder="Ingresa tu CURP"
+              maxLength={18}
+              transformUppercase
+              rules={{
+                required: "Ingresa tu CURP",
+                validate: (value: string) => {
+                  const normalized = normalizeCurp(value ?? "");
+                  return CURP_REGEX.test(normalized)
+                    ? true
+                    : "La CURP no es válida.";
+                },
+              }}
             />
           </form>
         </div>

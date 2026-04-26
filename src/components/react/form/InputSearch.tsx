@@ -7,6 +7,7 @@ interface PropsInputSearch {
   placeholder?: string;
   onChange?: (selected: string[]) => void;
   debounceMs?: number;
+  sanitize?: (value: string) => string;
 }
 
 export const InputSearch = ({
@@ -15,6 +16,7 @@ export const InputSearch = ({
   placeholder = "Buscar...",
   onChange,
   debounceMs = 300,
+  sanitize,
 }: PropsInputSearch) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredOptions, setFilteredOptions] = useState<string[]>([]);
@@ -24,20 +26,27 @@ export const InputSearch = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   //? metodo para busqueda
+  const sanitizeValue = useCallback(
+    (value: string) => (sanitize ? sanitize(value) : value),
+    [sanitize],
+  );
+
   const performSearch = useCallback(
     (term: string) => {
-      if (!term.trim()) {
+      const sanitizedTerm = sanitizeValue(term).trim();
+      if (!sanitizedTerm) {
         setFilteredOptions([]);
         return;
       }
 
-      const lowerTerm = term.toLowerCase();
-      const matches = options.filter((opt) =>
-        opt.toLowerCase().includes(lowerTerm),
-      );
+      const lowerTerm = sanitizedTerm.toLowerCase();
+      const matches = options.filter((opt) => {
+        const normalizedOption = sanitizeValue(opt).toLowerCase();
+        return normalizedOption.includes(lowerTerm);
+      });
       setFilteredOptions(matches);
     },
-    [options],
+    [options, sanitizeValue],
   );
   //*Almacenas en memoria para el debounce
   const debouncedSearch = useMemo(
@@ -65,7 +74,7 @@ export const InputSearch = ({
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    const value = sanitizeValue(e.target.value);
     setSearchTerm(value);
     setIsOpen(true);
   };

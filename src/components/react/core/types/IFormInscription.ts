@@ -1,8 +1,8 @@
 import type { Responsible } from "./IFormGetToken";
 
 interface PersonalInfo {
-  curp: string;
   birthCertificate: string;
+  curp: string;
 }
 
 interface SchoolInfo {
@@ -10,8 +10,8 @@ interface SchoolInfo {
   placeExpedition: string;
   averageFinal: number;
   certificate: string;
-  certificateFile?: File[];
-  typeInstitution: "public" | "private";
+  certificateFile?: File | string;
+  typeInstitution: "privada" | "publica";
 }
 
 export interface IFormInscription {
@@ -21,6 +21,7 @@ export interface IFormInscription {
     hasDifferentResponsible?: boolean;
     name?: string;
     lastName?: string;
+     birthDate?: string;
     relationShip?: string;
     address?: { lat: number; lng: number };
     email?: string;

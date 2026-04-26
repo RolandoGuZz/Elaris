@@ -12,6 +12,7 @@ import type { FormGetToken } from "../core/types/IFormGetToken";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import type { LatLng } from "leaflet";
+import { isPointInOaxaca } from "../utils/geo";
 
 const DEFAULT_LOCATION: LatLngExpression = [16.793404, -96.675031];
 
@@ -42,6 +43,7 @@ export const MapComponent = ({ title, name }: PropsMapsComponent) => {
   const { setValue, watch } = useFormContext<FormGetToken>();
   const [selectedPosition, setSelectedPosition] =
     useState<LatLngExpression | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (name) {
@@ -55,8 +57,13 @@ export const MapComponent = ({ title, name }: PropsMapsComponent) => {
   }, [name, watch]);
 
   const handleLocationSelect = (lat: number, lng: number) => {
+    if (!isPointInOaxaca(lat, lng)) {
+      setError("La ubicación debe estar dentro del estado de Oaxaca.");
+      return;
+    }
+
     const coordinates: Coordinates = { lat, lng };
-    console.log("Coordenadas: " + lat + " ____" + lng);
+    setError(null);
     setSelectedPosition([lat, lng]);
     if (name) {
       setValue(name as keyof FormGetToken, coordinates);
@@ -79,6 +86,11 @@ export const MapComponent = ({ title, name }: PropsMapsComponent) => {
       <p className="text-sm text-left font-medium dark:text-slate-300">
         {title}
       </p>
+      {error && (
+        <p className="text-sm text-left font-medium text-red-600">
+          {error}
+        </p>
+      )}
       <MapContainer
         center={DEFAULT_LOCATION}
         zoom={15}
