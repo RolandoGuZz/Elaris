@@ -13,7 +13,7 @@ const personalInfoSchema = z.object({
 
 /* ---------------- INFORMACIÓN ESCOLAR ---------------- */
 
-const schoolInfoSchema = z.object({
+const filledSchoolInfoSchema = z.object({
   name: z.string().min(2, "El nombre de la escuela es obligatorio"),
 
   placeExpedition: z.string().min(1, "El lugar de expedición es obligatorio"),
@@ -39,6 +39,59 @@ const schoolInfoSchema = z.object({
   typeInstitution: z.enum(["privada", "publica"], {
     message: "Selecciona el tipo de institución",
   }),
+});
+
+const rawSchoolInfoSchema = z.object({
+  name: z.string().optional(),
+  placeExpedition: z.string().optional(),
+  averageFinal: z.string().optional(),
+  certificate: z.string().optional(),
+  certificateFile: z.union([z.instanceof(File), z.string()]).optional(),
+  typeInstitution: z.enum(["privada", "publica"]).optional(),
+});
+
+const schoolInfoSchema = rawSchoolInfoSchema.transform((raw, ctx) => {
+  const normalize = (value?: string) => value?.trim?.() ?? "";
+
+  const normalized = {
+    name: normalize(raw.name),
+    placeExpedition: normalize(raw.placeExpedition),
+    averageFinal: normalize(raw.averageFinal),
+    certificate: normalize(raw.certificate),
+    certificateFile: raw.certificateFile,
+    typeInstitution: raw.typeInstitution,
+  };
+
+  const hasAnyValue = [
+    normalized.name,
+    normalized.placeExpedition,
+    normalized.averageFinal,
+    normalized.certificate,
+    normalized.typeInstitution,
+    normalized.certificateFile,
+  ].some((value) => {
+    if (typeof value === "string") {
+      return value.length > 0;
+    }
+    return value !== undefined && value !== null;
+  });
+
+  if (!hasAnyValue) {
+    return null;
+  }
+
+  const result = filledSchoolInfoSchema.safeParse({
+    ...normalized,
+    certificateFile: normalized.certificateFile,
+  });
+  if (!result.success) {
+    result.error.issues.forEach((issue) => {
+      ctx.addIssue(issue);
+    });
+    return z.NEVER;
+  }
+
+  return result.data;
 });
 
 /* ---------------- RESPONSABLE ---------------- */
@@ -73,10 +126,31 @@ const responsibleValidationSchema = z.object({
 
 /* ---------------- FORMULARIO COMPLETO ---------------- */
 
-export const formInscriptionSchema = z.object({
-  personalInfo: personalInfoSchema,
-  schoolInfo: z.array(schoolInfoSchema),
-  responsible: responsibleValidationSchema.optional(),
-});
+export const formInscriptionSchema = z
+  .object({
+    personalInfo: personalInfoSchema,
+    schoolInfo: z.array(schoolInfoSchema),
+    responsible: responsibleValidationSchema.optional(),
+  })
+  .transform((data) => {
+    const filteredSchoolInfo = data.schoolInfo.filter(
+      (entry): entry is z.infer<typeof filledSchoolInfoSchema> => entry !== null,
+    );
+
+    if (filteredSchoolInfo.length === 0) {
+      throw new z.ZodError([
+        {
+          code: z.ZodIssueCode.custom,
+          path: ["schoolInfo"],
+          message: "Capturá al menos una escolaridad",
+        },
+      ]);
+    }
+
+    return {
+      ...data,
+      schoolInfo: filteredSchoolInfo,
+    };
+  });
 
 export type FormInscriptionSchemaType = z.infer<typeof formInscriptionSchema>;
