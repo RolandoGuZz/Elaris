@@ -6,6 +6,8 @@ import { InputText } from "../form/InputText";
 import { MapComponent } from "../layout/MapComponent";
 import type { FormGetToken } from "../core/types/IFormGetToken";
 
+const AVERAGE_PATTERN = /^(?:[0-9]\.[0-9]|10\.0)$/;
+
 export const SchoolBackgroundScreen = () => {
   const { getValues } = useFormContext<FormGetToken>();
 
@@ -87,12 +89,23 @@ export const SchoolBackgroundScreen = () => {
           <InputText
             name="school.finalAverage"
             label="Promedio Final"
-            type="number"
-            placeholder="e.g. 9.5"
-            allowDecimal
-            step="0.01"
+            placeholder="e.g. 9.0"
             inputMode="decimal"
-            rules={{ valueAsNumber: true }}
+            rules={{
+              required: "Ingresa el promedio",
+              setValueAs: (value: string) => value?.trim?.() ?? value,
+              validate: (value: string) => {
+                const trimmed = value?.trim?.() ?? "";
+                if (!AVERAGE_PATTERN.test(trimmed)) {
+                  return "Usá el formato 9.0";
+                }
+                const numeric = Number(trimmed);
+                if (Number.isNaN(numeric) || numeric < 0 || numeric > 10) {
+                  return "El promedio debe estar entre 0.0 y 10.0";
+                }
+                return true;
+              },
+            }}
           />
 
           <InputSelect

@@ -31,7 +31,7 @@ interface SchoolInfo {
   knowledgeArea: string;
   enrollmentYear: number | null;
   graduationYear: number | null;
-  finalAverage: number | null;
+  finalAverage: string | null;
   schoolType: string;
   location: Coordinates;
 }

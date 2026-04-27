@@ -73,6 +73,7 @@ interface SchoolSlideProps {
 const CERTIFICATE_PATTERN =
   /^[A-Z0-9]{8}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{12}$/;
 const CERTIFICATE_GROUPS = [8, 4, 4, 4, 12];
+const AVERAGE_PATTERN = /^(?:[0-9]\.[0-9]|10\.0)$/;
 
 const formatCertificateFolio = (value: string) => {
   const cleaned = value
@@ -182,30 +183,21 @@ const SchoolSlide = ({ level, index }: SchoolSlideProps) => {
           <InputText
             name={`schoolInfo.${index}.averageFinal` as const}
             label="Promedio final *"
-            placeholder="9.5"
-            type="number"
-            allowDecimal
+            placeholder="9.0"
             inputMode="decimal"
-            step="0.1"
             rules={{
               required: "Ingresa el promedio",
-              valueAsNumber: true,
-              min: {
-                value: 0,
-                message: "El promedio debe ser entre 0 y 10",
-              },
-              max: {
-                value: 10,
-                message: "El promedio debe ser entre 0 y 10",
-              },
-              validate: (value) => {
-                if (typeof value !== "number" || Number.isNaN(value)) {
-                  return "Ingresa un promedio válido";
+              setValueAs: (value: string) => value?.trim?.() ?? value,
+              validate: (value: string) => {
+                const trimmed = value?.trim?.() ?? "";
+                if (!AVERAGE_PATTERN.test(trimmed)) {
+                  return "Ingresa un promedio en formato 9.0";
                 }
-                const strValue = value.toString();
-                return /^\d{1,2}(\.\d)?$/.test(strValue)
-                  ? true
-                  : "El promedio solo puede tener un decimal";
+                const numeric = Number(trimmed);
+                if (Number.isNaN(numeric) || numeric < 0 || numeric > 10) {
+                  return "El promedio debe ser entre 0.0 y 10.0";
+                }
+                return true;
               },
             }}
           />
