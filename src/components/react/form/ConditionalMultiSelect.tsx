@@ -35,6 +35,7 @@ export const ConditionalMultiSelect = ({
   const selectedBoolean = useWatch({
     control,
     name: nameBoolean,
+    defaultValue: false,
   });
 
   const handleBooleanChange = (value: boolean) => {
@@ -87,6 +88,7 @@ export const ConditionalMultiSelect = ({
           label="Ingrese el nombre"
           placeholder="Buscar opciones..."
           onChange={handleSearchChange}
+          value={optionsField.value ?? []}
           sanitize={sanitize}
         />
       )}

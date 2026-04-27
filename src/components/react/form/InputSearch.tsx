@@ -8,6 +8,7 @@ interface PropsInputSearch {
   onChange?: (selected: string[]) => void;
   debounceMs?: number;
   sanitize?: (value: string) => string;
+  value?: string[];
 }
 
 export const InputSearch = ({
@@ -17,6 +18,7 @@ export const InputSearch = ({
   onChange,
   debounceMs = 300,
   sanitize,
+  value,
 }: PropsInputSearch) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredOptions, setFilteredOptions] = useState<string[]>([]);
@@ -60,6 +62,20 @@ export const InputSearch = ({
   }, [searchTerm, debouncedSearch]);
 
   useEffect(() => {
+    if (!value) {
+      setSelectedOptions([]);
+      return;
+    }
+    const sanitizedValues = value
+      .map((item) => sanitizeValue(item).trim())
+      .filter((item) => item.length > 0);
+    const unique = Array.from(
+      new Map(sanitizedValues.map((item) => [item.toLowerCase(), item] as const)).values(),
+    );
+    setSelectedOptions(unique);
+  }, [value, sanitizeValue]);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         containerRef.current &&
@@ -77,6 +93,37 @@ export const InputSearch = ({
     const value = sanitizeValue(e.target.value);
     setSearchTerm(value);
     setIsOpen(true);
+  };
+
+  const addCustomOption = (rawValue: string) => {
+    const sanitized = sanitizeValue(rawValue).trim();
+    if (!sanitized) {
+      return;
+    }
+
+    const alreadySelected = selectedOptions.some(
+      (option) => sanitizeValue(option).toLowerCase() === sanitized.toLowerCase(),
+    );
+    const existsInOptions = options.some(
+      (option) => sanitizeValue(option).toLowerCase() === sanitized.toLowerCase(),
+    );
+    if (alreadySelected || existsInOptions) {
+      return;
+    }
+
+    const newSelected = [...selectedOptions, sanitized];
+    setSelectedOptions(newSelected);
+    setSearchTerm("");
+    setFilteredOptions([]);
+    setIsOpen(false);
+    onChange?.(newSelected);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === ",") {
+      e.preventDefault();
+      addCustomOption(searchTerm);
+    }
   };
 
   const handleSelectOption = (option: string) => {
@@ -134,6 +181,7 @@ export const InputSearch = ({
         type="text"
         value={searchTerm}
         onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
         onFocus={() => setIsOpen(true)}
         placeholder={placeholder}
         className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
