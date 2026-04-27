@@ -1,6 +1,6 @@
 import { useController, useFormContext, useWatch } from "react-hook-form";
 import type { Path } from "react-hook-form";
-import type { FormGetToken } from "../core/types/FormGetToken";
+import type { FormGetToken } from "../core/types/IFormGetToken";
 import { InputSearch } from "./InputSearch";
 
 interface ConditionalMultiSelectProps {
@@ -8,6 +8,7 @@ interface ConditionalMultiSelectProps {
   nameOptions: Path<FormGetToken>;
   label: string;
   options: string[];
+  sanitize?: (value: string) => string;
 }
 
 export const ConditionalMultiSelect = ({
@@ -15,6 +16,7 @@ export const ConditionalMultiSelect = ({
   nameOptions,
   label,
   options,
+  sanitize,
 }: ConditionalMultiSelectProps) => {
   const { control } = useFormContext<FormGetToken>();
 
@@ -82,9 +84,10 @@ export const ConditionalMultiSelect = ({
       {selectedBoolean === true && (
         <InputSearch
           options={options}
-          label="Seleccione una o más opciones"
+          label="Ingrese el nombre"
           placeholder="Buscar opciones..."
           onChange={handleSearchChange}
+          sanitize={sanitize}
         />
       )}
     </div>

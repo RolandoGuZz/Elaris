@@ -1,59 +1,54 @@
-interface ICordinates {
+interface Coordinates {
   lat: number;
   lng: number;
 }
 
-interface IdentificationUser {
+interface IdentificationInfo {
   firstName: string;
   lastName: string;
-  age: string;
   birthDate: string;
+  curp: string;
   gender: string;
   maritalStatus: string;
-  address: ICordinates;
+  address: Coordinates;
   phone: string;
   email: string;
   career: string;
   campus: string;
-  bloodType: string;
-  medicalConditions: string;
-  allergies: string;
-  medications: string;
 }
 
-interface personalDocumentation {
-  birthCertificate: File | null;
-  highSchoolCertificate: File | null;
-  highSchoolProof: File | null;
-  curp: File | null;
-  photos: File | null;
+type UploadValue = File | string | null;
+
+interface PersonalDocumentation {
+  birthCertificate: UploadValue;
+  highSchoolProof: UploadValue;
+  curp: UploadValue;
+  photos: UploadValue;
 }
 
-interface School {
+interface SchoolInfo {
   name: string;
-  location: string;
   knowledgeArea: string;
-  enrollmentYear: number;
-  graduationYear: number;
-  finalAverage: number;
-  certificateFolio: string;
+  enrollmentYear: number | null;
+  graduationYear: number | null;
+  finalAverage: number | null;
   schoolType: string;
-  certificate?: File;
+  location: Coordinates;
 }
 
-interface Applicant {
+interface ApplicantInfo {
   bloodType: string;
+  hasDiseases: boolean;
   diseases: string[];
-  diseasesDetails: string;
+  hasAllergies: boolean;
   allergies: string[];
-  allergiesDetails: string;
-  specialMedications: string[];
+  takesSpecialMedications: boolean;
   medicationsDetails: string[];
+  hasDisability: boolean;
   disability: string[];
-  disabilityDetails: string;
+  isIndigenous: boolean;
   indigenous: string[];
-  ethnicGroup: string;
-  indigenousLanguage: string;
+  speaksIndigenousLanguage: boolean;
   languageDetails: string[];
   afrodescendant: string;
 }
@@ -61,16 +56,19 @@ interface Applicant {
 export interface Responsible {
   name: string;
   lastName: string;
+  birthDate: string;
   relationShip: string;
-  address: ICordinates;
+  address: Coordinates;
   occupation: string;
   phone: string;
 }
 
 export interface IFormGetToken {
-  identification: IdentificationUser;
-  school: School;
-  personalDocumentation: personalDocumentation;
-  applicant: Applicant;
+  identification: IdentificationInfo;
+  school: SchoolInfo;
+  personalDocumentation: PersonalDocumentation;
+  applicant: ApplicantInfo;
   responsible: Responsible;
 }
+
+export type FormGetToken = IFormGetToken;

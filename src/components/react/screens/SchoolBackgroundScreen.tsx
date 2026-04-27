@@ -1,10 +1,14 @@
+import { useFormContext } from "react-hook-form";
 import { OPTIONS_TYPE_SCHOOL } from "../core/const/options";
 import { InputFiles } from "../form/InputFiles";
 import { InputSelect } from "../form/InputSelect";
 import { InputText } from "../form/InputText";
 import { MapComponent } from "../layout/MapComponent";
+import type { FormGetToken } from "../core/types/IFormGetToken";
 
 export const SchoolBackgroundScreen = () => {
+  const { getValues } = useFormContext<FormGetToken>();
+
   return (
     <div className="space-y-10">
       <section className="space-y-6">
@@ -30,14 +34,47 @@ export const SchoolBackgroundScreen = () => {
             name="school.enrollmentYear"
             label="Anio de Ingreso"
             type="number"
-            rules={{ valueAsNumber: true }}
+            inputMode="numeric"
+            rules={{
+              valueAsNumber: true,
+              validate: (value) => {
+                if (typeof value !== "number" || Number.isNaN(value)) {
+                  return "Ingresa el año de ingreso";
+                }
+                const graduationYear = getValues("school.graduationYear");
+                if (
+                  typeof graduationYear === "number" &&
+                  !Number.isNaN(graduationYear) &&
+                  graduationYear - value < 3
+                ) {
+                  return "El año de ingreso debe ser al menos 3 años anterior al de egreso";
+                }
+                return true;
+              },
+            }}
           />
 
           <InputText
             name="school.graduationYear"
             label="Anio de Graduacion"
             type="number"
-            rules={{ valueAsNumber: true }}
+            inputMode="numeric"
+            rules={{
+              valueAsNumber: true,
+              validate: (value) => {
+                if (typeof value !== "number" || Number.isNaN(value)) {
+                  return "Ingresa el año de egreso";
+                }
+                const enrollmentYear = getValues("school.enrollmentYear");
+                if (typeof enrollmentYear !== "number" || Number.isNaN(enrollmentYear)) {
+                  return "Ingresa primero el año de ingreso";
+                }
+                if (value - enrollmentYear < 3) {
+                  return "El año de egreso debe ser al menos 3 años posterior al de ingreso";
+                }
+                return true;
+              },
+            }}
           />
         </div>
       </section>
@@ -52,6 +89,9 @@ export const SchoolBackgroundScreen = () => {
             label="Promedio Final"
             type="number"
             placeholder="e.g. 9.5"
+            allowDecimal
+            step="0.01"
+            inputMode="decimal"
             rules={{ valueAsNumber: true }}
           />
 

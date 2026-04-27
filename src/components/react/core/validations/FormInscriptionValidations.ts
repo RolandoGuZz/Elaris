@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { optionalRestrictedEmailSchema } from "./utils/email";
+import { curpSchema } from "./utils/curp";
 
 /* ---------------- INFORMACIÓN PERSONAL ---------------- */
 
 const personalInfoSchema = z.object({
-  curp: z.string().min(1, "El CURP es obligatorio"),
-
   birthCertificate: z.string().min(1, "El acta de nacimiento es obligatoria"),
+  curp: curpSchema,
 });
 
 /* ---------------- INFORMACIÓN ESCOLAR ---------------- */
@@ -25,9 +26,11 @@ const schoolInfoSchema = z.object({
 
   certificate: z.string().min(1, "El certificado es obligatorio"),
 
-  certificateFile: z.array(z.instanceof(File)).optional(),
+  certificateFile: z
+    .union([z.instanceof(File), z.string().url()])
+    .optional(),
 
-  typeInstitution: z.enum(["public", "private"], {
+  typeInstitution: z.enum(["privada", "publica"], {
     message: "Selecciona el tipo de institución",
   }),
 });
@@ -41,6 +44,8 @@ const responsibleValidationSchema = z.object({
 
   lastName: z.string().min(2, "El apellido es obligatorio").optional(),
 
+  birthDate: z.string().min(1, "Ingresa la fecha de nacimiento").optional(),
+
   relationShip: z.string().min(1, "Selecciona el parentesco").optional(),
 
   address: z
@@ -50,7 +55,7 @@ const responsibleValidationSchema = z.object({
     })
     .optional(),
 
-  email: z.string().email("Ingresa un correo válido").optional(),
+  email: optionalRestrictedEmailSchema,
 
   occupation: z.string().min(2, "La ocupación es obligatoria").optional(),
 

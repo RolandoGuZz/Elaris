@@ -1,4 +1,5 @@
 import { useFormContext, Controller } from "react-hook-form";
+import type { RegisterOptions } from "react-hook-form";
 import type { FormInscriptionSchemaType } from "../../core/validations/FormInscriptionValidations";
 import { InputText } from "../../form/InputText";
 import { InputSelect } from "../../form/InputSelect";
@@ -10,6 +11,42 @@ export const ResponsibleInfoScreen = () => {
 
   const hasDifferentResponsible =
     watch("responsible.hasDifferentResponsible") ?? false;
+
+  const textRules: Record<string, RegisterOptions<FormInscriptionSchemaType>> = {
+    "responsible.name": {
+      required: "Ingresa el nombre del responsable",
+      validate: (value: string) =>
+        /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/.test(value.trim())
+          ? true
+          : "El nombre solo puede contener letras",
+    },
+    "responsible.lastName": {
+      required: "Ingresa los apellidos del responsable",
+      validate: (value: string) =>
+        /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]+$/.test(value.trim())
+          ? true
+          : "Los apellidos solo pueden contener letras",
+    },
+    "responsible.birthDate": {
+      required: "Ingresa la fecha de nacimiento del responsable",
+    },
+    "responsible.phone": {
+      required: "Ingresa el teléfono del responsable",
+      pattern: {
+        value: /^[0-9]{10}$/,
+        message: "El teléfono debe tener 10 dígitos",
+      },
+    },
+    "responsible.occupation": {
+      required: "Ingresa la ocupación del responsable",
+    },
+  };
+
+  const selectRules: Record<string, RegisterOptions<FormInscriptionSchemaType>> = {
+    "responsible.relationShip": {
+      required: "Selecciona el parentesco",
+    },
+  };
 
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -55,6 +92,7 @@ export const ResponsibleInfoScreen = () => {
                   label={field.label}
                   placeholder={field.placeholder}
                   type={field.type}
+                  rules={textRules[field.name as keyof typeof textRules]}
                 />
               ) : (
                 <InputSelect
@@ -62,6 +100,7 @@ export const ResponsibleInfoScreen = () => {
                   name={field.name}
                   label={field.label}
                   options={field.options}
+                  rules={selectRules[field.name as keyof typeof selectRules]}
                 />
               ),
             )}

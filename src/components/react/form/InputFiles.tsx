@@ -35,13 +35,21 @@ export const InputFiles = <T extends FieldValues>({
   });
 
   useEffect(() => {
-    if (formValue && typeof formValue === "object" && "name" in formValue) {
+    if (formValue instanceof File) {
       setFileStatus("success");
-      setFileName((formValue as File).name);
-    } else if (formValue === null) {
-      setFileStatus("idle");
-      setFileName("");
+      setFileName(formValue.name);
+      return;
     }
+
+    if (typeof formValue === "string" && formValue.length > 0) {
+      setFileStatus("success");
+      const parts = formValue.split("/");
+      setFileName(parts[parts.length - 1]);
+      return;
+    }
+
+    setFileStatus("idle");
+    setFileName("");
   }, [formValue]);
 
   const {

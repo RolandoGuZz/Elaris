@@ -1,14 +1,20 @@
 import { useFormContext } from "react-hook-form";
 import type { Path } from "react-hook-form";
-import type { FormGetToken } from "../core/types/FormGetToken";
+import type { FormGetToken } from "../core/types/IFormGetToken";
 
 interface PropsInputSelect {
   name: Path<FormGetToken>;
   label?: string;
   options?: string[];
+  normalize?: (value: string) => string;
 }
 
-export const InputSelect = ({ name, label, options }: PropsInputSelect) => {
+export const InputSelect = ({
+  name,
+  label,
+  options,
+  normalize,
+}: PropsInputSelect) => {
   const {
     register,
     watch,
@@ -29,6 +35,8 @@ export const InputSelect = ({ name, label, options }: PropsInputSelect) => {
       <div className="flex flex-wrap gap-3">
         {options?.map((option) => {
           const isSelected = selectedValue === option;
+          const registerReturn = register(name);
+
           return (
             <label
               key={option}
@@ -47,7 +55,12 @@ export const InputSelect = ({ name, label, options }: PropsInputSelect) => {
               <input
                 type="radio"
                 value={option}
-                {...register(name)}
+                {...registerReturn}
+                onChange={(event) => {
+                  const value = normalize ? normalize(event.target.value) : event.target.value;
+                  event.target.value = value;
+                  registerReturn.onChange(event);
+                }}
                 className="sr-only"
               />
 

@@ -1,6 +1,6 @@
 import { useFormContext } from "react-hook-form";
 import type { Path } from "react-hook-form";
-import type { FormGetToken } from "../core/types/FormGetToken";
+import type { FormGetToken } from "../core/types/IFormGetToken";
 
 interface PropsInput {
   name: Path<FormGetToken>;
