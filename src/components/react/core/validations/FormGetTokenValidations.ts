@@ -107,6 +107,8 @@ const personalDocumentationSchema = z.object({
 
 /* ---------------- ESCUELA ---------------- */
 
+const averagePattern = /^(?:[0-9]\.[0-9]|10\.0)$/;
+
 const schoolSchema = z
   .object({
     name: z
@@ -137,12 +139,16 @@ const schoolSchema = z
       .max(new Date().getFullYear()),
 
     finalAverage: z
-      .number({
+      .string({
         required_error: "El promedio es obligatorio",
-        message: "Solo se aceptan numero",
+        invalid_type_error: "Ingresá el promedio en formato 9.0",
       })
-      .min(0, "Promedio inválido")
-      .max(10, "El promedio máximo es 10"),
+      .trim()
+      .regex(averagePattern, "Usá el formato 9.0")
+      .refine((value) => {
+        const numeric = Number(value);
+        return !Number.isNaN(numeric) && numeric >= 0 && numeric <= 10;
+      }, "El promedio debe estar entre 0.0 y 10.0"),
 
     schoolType: z.string().min(1, "Selecciona un tipo de escuela"),
   })

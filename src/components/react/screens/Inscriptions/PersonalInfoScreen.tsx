@@ -49,6 +49,17 @@ export const PersonalInfo = () => {
                 },
               }}
             />
+            <p className="text-sm text-left text-slate-600 dark:text-slate-300">
+              ¿No conoces tu CURP?{" "}
+              <a
+                href="https://www.gob.mx/curp/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 dark:text-blue-400 font-semibold underline"
+              >
+                Puedes consultarla aquí.
+              </a>
+            </p>
           </form>
         </div>
       </div>

@@ -65,12 +65,17 @@ export function InputText<T extends FieldValues>({
         let sanitized = value.replace(/[^0-9.]/g, "");
         const dotIndex = sanitized.indexOf(".");
         if (dotIndex !== -1) {
-          sanitized =
-            sanitized.slice(0, dotIndex + 1) +
-            sanitized
-              .slice(dotIndex + 1)
-              .replace(/\./g, "");
+          const intPartRaw = sanitized.slice(0, dotIndex).replace(/\./g, "");
+          const decimalRaw = sanitized.slice(dotIndex + 1).replace(/\./g, "");
+
+          const intPart = intPartRaw.length > 0 ? intPartRaw : "0";
+          const decimalPart = decimalRaw.slice(0, 1);
+
+          sanitized = decimalPart.length > 0 ? `${intPart}.${decimalPart}` : intPart;
+        } else {
+          sanitized = sanitized.replace(/\./g, "");
         }
+
         e.currentTarget.value = sanitized;
       } else {
         e.currentTarget.value = value.replace(/[^0-9]/g, "");

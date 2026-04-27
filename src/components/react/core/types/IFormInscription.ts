@@ -8,7 +8,7 @@ interface PersonalInfo {
 interface SchoolInfo {
   name: string;
   placeExpedition: string;
-  averageFinal: number;
+  averageFinal: string;
   certificate: string;
   certificateFile?: File | string;
   typeInstitution: "privada" | "publica";

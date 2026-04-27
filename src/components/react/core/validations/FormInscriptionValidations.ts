@@ -2,6 +2,8 @@ import { z } from "zod";
 import { optionalRestrictedEmailSchema } from "./utils/email";
 import { curpSchema } from "./utils/curp";
 
+const averagePattern = /^(?:[0-9]\.[0-9]|10\.0)$/;
+
 /* ---------------- INFORMACIÓN PERSONAL ---------------- */
 
 const personalInfoSchema = z.object({
@@ -17,12 +19,16 @@ const schoolInfoSchema = z.object({
   placeExpedition: z.string().min(1, "El lugar de expedición es obligatorio"),
 
   averageFinal: z
-    .number({
+    .string({
       required_error: "El promedio es obligatorio",
-      invalid_type_error: "Solo se aceptan números",
+      invalid_type_error: "Ingresa el promedio en formato 9.0",
     })
-    .min(0, "El promedio mínimo es 0")
-    .max(10, "El promedio máximo es 10"),
+    .trim()
+    .regex(averagePattern, "Ingresa el promedio en formato 9.0")
+    .refine((value) => {
+      const numeric = Number(value);
+      return !Number.isNaN(numeric) && numeric >= 0 && numeric <= 10;
+    }, "El promedio debe estar entre 0.0 y 10.0"),
 
   certificate: z.string().min(1, "El certificado es obligatorio"),
 

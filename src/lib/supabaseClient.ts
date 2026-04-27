@@ -48,6 +48,7 @@ const MONTHS_ES = [
   "noviembre",
   "diciembre",
 ];
+const AVERAGE_PATTERN = /^(?:[0-9]\.[0-9]|10\.0)$/;
 
 type UUID = string;
 
@@ -69,6 +70,19 @@ const mapGenderToDb = (gender: string) => {
 const joinOrNull = (values?: string[]) => {
   if (!values || values.length === 0) return null;
   return values.join(", ");
+};
+
+const parseAverage = (value?: string | null): number | null => {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
+  if (!AVERAGE_PATTERN.test(normalized)) {
+    return null;
+  }
+  const parsed = Number.parseFloat(normalized);
+  if (Number.isNaN(parsed)) {
+    return null;
+  }
+  return parsed;
 };
 
 const findPersonaIdByCurp = async (
@@ -450,19 +464,33 @@ const sendAdmissionEmail = async (params: {
     <p>Éxito en tu proceso de admisión.</p>
   `;
 
-  const client = getSupabase();
-  const { error } = await client.functions.invoke("resend-email", {
-    body: {
-      to: email,
-      subject: "Confirmación de ficha de admisión",
-      html,
-    },
-  });
-
-  if (error) {
+  const anonKey = supabaseAnonKey;
+  if (!anonKey) {
     throw new Error(
-      `No se pudo enviar el correo de confirmación: ${error.message}`,
+      "No se pudo enviar el correo porque falta VITE_SUPABASE_ANON_KEY.",
     );
+  }
+
+  const response = await fetch(
+    "https://zseduawvdpcfmmllhfxk.supabase.co/functions/v1/resend-email",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+      },
+      body: JSON.stringify({
+        to: "teddiazdiaz019@gmail.com",
+        subject: "Confirmación de ficha de admisión",
+        html,
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error("No se pudo enviar el correo: " + errorText);
   }
 };
 
@@ -731,16 +759,16 @@ export const saveApplicant = async (form: FormGetToken) => {
       form.school.location,
     );
 
+    const finalAverageValue = parseAverage(form.school.finalAverage);
     if (
-      typeof form.school.finalAverage === "number" &&
-      !Number.isNaN(form.school.finalAverage) &&
+      finalAverageValue !== null &&
       typeof form.school.graduationYear === "number" &&
       !Number.isNaN(form.school.graduationYear)
     ) {
       await insertEscolaridad(
         applicantPersonaId,
         escuelaId,
-        form.school.finalAverage,
+        finalAverageValue,
         form.school.graduationYear,
       );
     }
@@ -887,9 +915,15 @@ export const saveInscription = async (form: IFormInscription) => {
           info.typeInstitution,
           null,
         );
-        await insertEscolaridad(personaId, schoolId, info.averageFinal, null);
-
         const suffix = index + 1;
+        const averageValue = parseAverage(info.averageFinal);
+        if (averageValue === null) {
+          throw new Error(
+            `El promedio del registro ${suffix} no tiene el formato correcto (ej. 9.0).`,
+          );
+        }
+
+        await insertEscolaridad(personaId, schoolId, averageValue, null);
 
         if (info.certificate) {
           await insertDocumento(
@@ -934,7 +968,7 @@ export const saveInscription = async (form: IFormInscription) => {
         await insertInscripcionEscolaridad(inscriptionId, level, {
           nombre: info.name.trim(),
           lugarExpedicion: info.placeExpedition.trim(),
-          promedio: info.averageFinal,
+          promedio: averageValue,
           folio: info.certificate,
           urlCertificado,
           tipoInstitucion: info.typeInstitution,
