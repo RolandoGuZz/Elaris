@@ -118,10 +118,22 @@ const schoolSchema = z
       .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s]+$/, "Solo se permiten letras y números"),
     location: coordinatesSchema,
     knowledgeArea: z
-      .string()
+      .string({
+        required_error: "Seleccioná al menos un área de conocimiento",
+        invalid_type_error: "Seleccioná al menos un área de conocimiento",
+      })
       .trim()
-      .min(1, "Selecciona un área de conocimiento")
-      .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "Solo se permiten letras"),
+      .min(1, "Seleccioná al menos un área de conocimiento")
+      .refine((value) => {
+        const items = value
+          .split(",")
+          .map((item) => item.trim())
+          .filter((item) => item.length > 0);
+        if (items.length === 0) {
+          return false;
+        }
+        return items.every((item) => /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(item));
+      }, "Solo se permiten letras y separá cada área con una coma"),
     enrollmentYear: z
       .number({
         required_error: "El año de ingreso es obligatorio",
@@ -161,6 +173,7 @@ const schoolSchema = z
         message: "El año de egreso debe ser al menos 3 años posterior al de ingreso",
       });
     }
+
   });
 
 /* ---------------- ASPIRANTE ---------------- */

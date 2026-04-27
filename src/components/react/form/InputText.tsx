@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { useFormContext } from "react-hook-form";
 import type { Path, RegisterOptions, FieldError, FieldValues } from "react-hook-form";
 
@@ -14,6 +15,8 @@ interface InputTextProps<T extends FieldValues> {
   step?: number | string;
   inputMode?: "decimal" | "numeric";
   allowDecimal?: boolean;
+  autoCompleteOptions?: string[];
+  sanitizeInput?: (value: string) => string;
 }
 
 export function InputText<T extends FieldValues>({
@@ -29,11 +32,16 @@ export function InputText<T extends FieldValues>({
   step,
   inputMode,
   allowDecimal = false,
+  autoCompleteOptions,
+  sanitizeInput,
 }: InputTextProps<T>) {
   const {
     register,
     formState: { errors },
   } = useFormContext<T>();
+
+  const uniqueId = useId();
+  const dataListId = autoCompleteOptions && autoCompleteOptions.length > 0 ? `${uniqueId}-options` : undefined;
 
   const getError = (obj: unknown, path: string): FieldError | undefined => {
     return path.split(".").reduce((acc: unknown, key) => (acc as Record<string, unknown>)?.[key], obj) as FieldError | undefined;
@@ -59,8 +67,9 @@ export function InputText<T extends FieldValues>({
   };
 
   const handleInput = (e: React.FormEvent<HTMLInputElement>) => {
+    let value = e.currentTarget.value;
+
     if (type === "number") {
-      const value = e.currentTarget.value;
       if (allowDecimal) {
         let sanitized = value.replace(/[^0-9.]/g, "");
         const dotIndex = sanitized.indexOf(".");
@@ -76,19 +85,28 @@ export function InputText<T extends FieldValues>({
           sanitized = sanitized.replace(/\./g, "");
         }
 
-        e.currentTarget.value = sanitized;
+        value = sanitized;
       } else {
-        e.currentTarget.value = value.replace(/[^0-9]/g, "");
+        value = value.replace(/[^0-9]/g, "");
       }
     }
 
     if (transformUppercase) {
-      const value = e.currentTarget.value;
-      const sanitized = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-      const limited = typeof maxLength === "number" ? sanitized.slice(0, maxLength) : sanitized;
-      if (limited !== value) {
-        e.currentTarget.value = limited;
-      }
+      const upperSanitized = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      value = typeof maxLength === "number" ? upperSanitized.slice(0, maxLength) : upperSanitized;
+    }
+
+    if (typeof maxLength === "number" && type !== "number" && !transformUppercase) {
+      value = value.slice(0, maxLength);
+    }
+
+    if (sanitizeInput) {
+      const sanitized = sanitizeInput(value);
+      value = sanitized;
+    }
+
+    if (value !== e.currentTarget.value) {
+      e.currentTarget.value = value;
     }
   };
 
@@ -115,6 +133,7 @@ export function InputText<T extends FieldValues>({
         maxLength={type === "number" ? undefined : maxLength}
         step={type === "number" ? step : undefined}
         inputMode={inputMode}
+        list={dataListId}
         className={` text-left
           w-full px-4 py-2.5 rounded-lg border
           bg-white text-slate-900 placeholder-slate-400 shadow-sm
@@ -133,6 +152,14 @@ export function InputText<T extends FieldValues>({
         <span className="text-xs text-left text-red-500 font-medium">
           {error.message as string}
         </span>
+      )}
+
+      {dataListId && (
+        <datalist id={dataListId}>
+          {autoCompleteOptions?.map((option) => (
+            <option key={option} value={option} />
+          ))}
+        </datalist>
       )}
     </div>
   );

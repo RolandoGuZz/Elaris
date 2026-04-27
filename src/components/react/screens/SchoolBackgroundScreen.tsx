@@ -1,15 +1,53 @@
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useController } from "react-hook-form";
 import { OPTIONS_TYPE_SCHOOL } from "../core/const/options";
 import { InputFiles } from "../form/InputFiles";
 import { InputSelect } from "../form/InputSelect";
 import { InputText } from "../form/InputText";
+import { InputSearch } from "../form/InputSearch";
 import { MapComponent } from "../layout/MapComponent";
 import type { FormGetToken } from "../core/types/IFormGetToken";
 
 const AVERAGE_PATTERN = /^(?:[0-9]\.[0-9]|10\.0)$/;
+const KNOWLEDGE_AREA_OPTIONS = [
+  "Ingeniería Agronómica",
+  "Agroindustrias Sustentables",
+  "Agronegocios",
+  "Administración de Empresas",
+  "Gestión de Negocios",
+  "Tecnologías de la Información",
+  "Ingeniería en Informática",
+  "Sistemas Computacionales",
+];
+
+const sanitizeKnowledgeArea = (value: string) =>
+  value
+    .replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 
 export const SchoolBackgroundScreen = () => {
-  const { getValues } = useFormContext<FormGetToken>();
+  const { getValues, control } = useFormContext<FormGetToken>();
+  const { field: knowledgeAreaField } = useController({
+    name: "school.knowledgeArea",
+    control,
+    defaultValue: "",
+  });
+
+  const knowledgeAreaArray = knowledgeAreaField.value
+    ? (() => {
+        const seen = new Set<string>();
+        return knowledgeAreaField.value
+          .split(",")
+          .map((item: string) => sanitizeKnowledgeArea(item))
+          .filter((item: string) => {
+            if (item.length === 0 || seen.has(item.toLowerCase())) {
+              return false;
+            }
+            seen.add(item.toLowerCase());
+            return true;
+          });
+      })()
+    : [];
 
   return (
     <div className="space-y-10">
@@ -26,11 +64,26 @@ export const SchoolBackgroundScreen = () => {
             rules={{ required: "Required field" }}
           />
 
-          <InputText
-            name="school.knowledgeArea"
-            label="Area de conocimiento"
-            placeholder="Informatica"
-          />
+          <div className="md:col-span-2">
+            <InputSearch
+              label="Área de conocimiento"
+              options={KNOWLEDGE_AREA_OPTIONS}
+              placeholder="Ej. Ingeniería Agronómica"
+              sanitize={sanitizeKnowledgeArea}
+              value={knowledgeAreaArray}
+              onChange={(selected) => {
+                const cleaned = selected
+                  .map((item) => sanitizeKnowledgeArea(item))
+                  .filter((item) => item.length > 0);
+                const unique = Array.from(
+                  new Map(
+                    cleaned.map((item) => [item.toLowerCase(), item] as const),
+                  ).values(),
+                );
+                knowledgeAreaField.onChange(unique.join(","));
+              }}
+            />
+          </div>
 
           <InputText
             name="school.enrollmentYear"
@@ -68,7 +121,10 @@ export const SchoolBackgroundScreen = () => {
                   return "Ingresa el año de egreso";
                 }
                 const enrollmentYear = getValues("school.enrollmentYear");
-                if (typeof enrollmentYear !== "number" || Number.isNaN(enrollmentYear)) {
+                if (
+                  typeof enrollmentYear !== "number" ||
+                  Number.isNaN(enrollmentYear)
+                ) {
                   return "Ingresa primero el año de ingreso";
                 }
                 if (value - enrollmentYear < 3) {
