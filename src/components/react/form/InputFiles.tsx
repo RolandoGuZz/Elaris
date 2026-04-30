@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import type { ChangeEvent } from "react";
 import {
   useFormContext,
   useWatch,
@@ -28,6 +29,7 @@ export const InputFiles = <T extends FieldValues>({
   const { control } = useFormContext<T>();
   const [fileStatus, setFileStatus] = useState<FileStatus>("idle");
   const [fileName, setFileName] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const formValue = useWatch({
     control,
@@ -38,6 +40,7 @@ export const InputFiles = <T extends FieldValues>({
     if (formValue instanceof File) {
       setFileStatus("success");
       setFileName(formValue.name);
+      setErrorMessage("");
       return;
     }
 
@@ -45,11 +48,13 @@ export const InputFiles = <T extends FieldValues>({
       setFileStatus("success");
       const parts = formValue.split("/");
       setFileName(parts[parts.length - 1]);
+      setErrorMessage("");
       return;
     }
 
     setFileStatus("idle");
     setFileName("");
+    setErrorMessage("");
   }, [formValue]);
 
   const {
@@ -61,37 +66,71 @@ export const InputFiles = <T extends FieldValues>({
     rules,
   });
 
-  const validateFile = (file: File): boolean => {
+  const validateFile = (file: File): string | null => {
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
     if (file.size > maxSizeBytes) {
-      return false;
+      return `Archivo muy grande (máx. ${maxSizeMB}MB)`;
     }
 
-    return true;
+    if (acceptedTypes && acceptedTypes.length > 0) {
+      const allowedTypes = acceptedTypes
+        .split(",")
+        .map((type) => type.trim().toLowerCase())
+        .filter((type) => type.length > 0);
+
+      if (allowedTypes.length > 0) {
+        const extension = file.name.includes(".")
+          ? `.${file.name.split(".").pop()?.toLowerCase() ?? ""}`
+          : "";
+        const mimeType = file.type.toLowerCase();
+
+        const matchesAllowedType = allowedTypes.some((type) => {
+          if (type.startsWith(".")) {
+            return extension === type;
+          }
+
+          if (type.endsWith("/*")) {
+            const baseType = type.slice(0, -2);
+            return mimeType.startsWith(`${baseType}/`);
+          }
+
+          return mimeType === type;
+        });
+
+        if (!matchesAllowedType) {
+          return "El formato del archivo no es el correcto";
+        }
+      }
+    }
+
+    return null;
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
 
     if (!file) {
       setFileStatus("idle");
       setFileName("");
+      setErrorMessage("");
       field.onChange(null);
       return;
     }
 
-    const isValid = validateFile(file);
+    const validationError = validateFile(file);
 
-    if (!isValid) {
+    if (validationError) {
       setFileStatus("error");
       setFileName(file.name);
+      setErrorMessage(validationError);
       field.onChange(null);
       return;
     }
 
     setFileStatus("success");
     setFileName(file.name);
+    setErrorMessage("");
     field.onChange(file);
   };
 
@@ -158,7 +197,7 @@ export const InputFiles = <T extends FieldValues>({
     if (fileStatus === "error") {
       return (
         <p className="text-sm font-medium text-red-600 dark:text-red-400">
-          Error: Archivo muy grande (máx. {maxSizeMB}MB)
+          {errorMessage || "No se pudo cargar el archivo"}
         </p>
       );
     }

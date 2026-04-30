@@ -26,11 +26,17 @@ export const InputSearch = ({
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [confirmationError, setConfirmationError] = useState<string>("");
 
   //? metodo para busqueda
   const sanitizeValue = useCallback(
     (value: string) => (sanitize ? sanitize(value) : value),
     [sanitize],
+  );
+
+  const normalizeValue = useCallback(
+    (value: string) => sanitizeValue(value).trim().toLowerCase(),
+    [sanitizeValue],
   );
 
   const performSearch = useCallback(
@@ -93,6 +99,9 @@ export const InputSearch = ({
     const value = sanitizeValue(e.target.value);
     setSearchTerm(value);
     setIsOpen(true);
+    if (confirmationError) {
+      setConfirmationError("");
+    }
   };
 
   const addCustomOption = (rawValue: string) => {
@@ -117,11 +126,28 @@ export const InputSearch = ({
     setFilteredOptions([]);
     setIsOpen(false);
     onChange?.(newSelected);
+    if (confirmationError) {
+      setConfirmationError("");
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === ",") {
+    if (e.key === "Enter" || e.key === ",") {
+      const normalized = sanitizeValue(searchTerm).trim();
+      if (normalized.length === 0) {
+        return;
+      }
       e.preventDefault();
+
+      const matchingOption = options.find(
+        (option) => normalizeValue(option) === normalizeValue(searchTerm),
+      );
+
+      if (matchingOption) {
+        handleSelectOption(matchingOption);
+        return;
+      }
+
       addCustomOption(searchTerm);
     }
   };
@@ -137,6 +163,9 @@ export const InputSearch = ({
     setIsOpen(false);
     onChange?.(newSelected);
     inputRef.current?.focus();
+    if (confirmationError) {
+      setConfirmationError("");
+    }
   };
 
   const handleRemoveOption = (option: string) => {
@@ -145,8 +174,56 @@ export const InputSearch = ({
     onChange?.(newSelected);
   };
 
+  const normalizedSelected = useMemo(() => {
+    return new Set(selectedOptions.map((item) => normalizeValue(item)));
+  }, [selectedOptions, normalizeValue]);
+
+  const normalizedAvailable = useMemo(() => {
+    return new Set(options.map((item) => normalizeValue(item)));
+  }, [options, normalizeValue]);
+
+  const sanitizedSearchTerm = sanitizeValue(searchTerm).trim();
+  const normalizedSearchTerm = normalizeValue(searchTerm);
+
+  const canCreateCustomOption =
+    sanitizedSearchTerm.length > 0 &&
+    !normalizedSelected.has(normalizedSearchTerm) &&
+    !normalizedAvailable.has(normalizedSearchTerm);
+
   const showNoResults =
-    isOpen && searchTerm.trim() && filteredOptions.length === 0;
+    isOpen &&
+    sanitizedSearchTerm.length > 0 &&
+    filteredOptions.length === 0 &&
+    !canCreateCustomOption;
+
+  const handleInputBlur = () => {
+    const trimmed = sanitizeValue(searchTerm).trim();
+    if (trimmed.length === 0) {
+      if (confirmationError) {
+        setConfirmationError("");
+      }
+      return;
+    }
+
+    const normalizedTrimmed = normalizeValue(trimmed);
+    const matchesExistingOption = options.some(
+      (option) => normalizeValue(option) === normalizedTrimmed,
+    );
+    const matchesSelectedOption = selectedOptions.some(
+      (option) => normalizeValue(option) === normalizedTrimmed,
+    );
+
+    if (!matchesExistingOption && !matchesSelectedOption) {
+      setConfirmationError(
+        "No has confirmado el nombre. Presioná Enter o seleccioná una opción.",
+      );
+      return;
+    }
+
+    if (confirmationError) {
+      setConfirmationError("");
+    }
+  };
 
   return (
     <div ref={containerRef} className="flex flex-col gap-2 w-[50%] relative">
@@ -183,12 +260,28 @@ export const InputSearch = ({
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         onFocus={() => setIsOpen(true)}
+        onBlur={handleInputBlur}
         placeholder={placeholder}
         className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
       />
 
-      {isOpen && filteredOptions.length > 0 && (
+      {confirmationError && (
+        <p className="text-xs font-medium text-red-500">{confirmationError}</p>
+      )}
+
+      {isOpen && (filteredOptions.length > 0 || canCreateCustomOption) && (
         <ul className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg shadow-lg max-h-60 overflow-y-auto z-50">
+          {canCreateCustomOption && (
+            <li>
+              <button
+                type="button"
+                onClick={() => addCustomOption(searchTerm)}
+                className="w-full px-4 py-2.5 text-left text-primary font-medium hover:bg-primary/10 transition-colors"
+              >
+                Crear "{sanitizedSearchTerm}"
+              </button>
+            </li>
+          )}
           {filteredOptions.map((option) => (
             <li key={option}>
               <button

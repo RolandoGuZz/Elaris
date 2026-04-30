@@ -50,6 +50,16 @@ const MONTHS_ES = [
 ];
 const AVERAGE_PATTERN = /^(?:[0-9]\.[0-9]|10\.0)$/;
 
+const PERSONAL_DOCUMENT_TYPES = {
+  birthCertificate: "Acta de Nacimiento",
+  highSchoolProof: "Constancia de Bachillerato",
+  curp: "Clave Única de Registro",
+  photos: "Fotografía",
+} satisfies Record<
+  keyof FormGetToken["personalDocumentation"],
+  string
+>;
+
 type UUID = string;
 
 const sanitizeFileName = (fileName: string) =>
@@ -65,6 +75,27 @@ const mapGenderToDb = (gender: string) => {
   if (gender === "Masculino") return "H";
   if (gender === "Femenino") return "M";
   return "X";
+};
+
+const splitLastNames = (
+  rawLastName: string | null | undefined,
+): {
+  apellidoPaterno: string | null;
+  apellidoMaterno: string | null;
+} => {
+  const normalized = rawLastName?.trim() ?? "";
+  if (!normalized) {
+    return { apellidoPaterno: null, apellidoMaterno: null };
+  }
+
+  const parts = normalized.split(/\s+/);
+  const apellidoPaterno = parts.shift() ?? null;
+  const apellidoMaterno = parts.length > 0 ? parts.join(" ") : null;
+
+  return {
+    apellidoPaterno: apellidoPaterno?.trim() || null,
+    apellidoMaterno: apellidoMaterno?.trim() || null,
+  };
 };
 
 const joinOrNull = (values?: string[]) => {
@@ -85,14 +116,13 @@ const parseAverage = (value?: string | null): number | null => {
   return parsed;
 };
 
-const findPersonaIdByCurp = async (
+const findAlumnoByCurp = async (
   normalizedCurp: string,
-): Promise<UUID | null> => {
+): Promise<{ alumnoId: UUID; personaId: UUID } | null> => {
   const { data, error } = await supabase
-    .from("documento")
-    .select("id_persona")
-    .eq("tipo", "curp_text")
-    .eq("url_archivo", normalizedCurp)
+    .from("alumno")
+    .select("id_alumno, id_persona")
+    .eq("curp", normalizedCurp)
     .limit(1)
     .maybeSingle();
 
@@ -102,39 +132,53 @@ const findPersonaIdByCurp = async (
     );
   }
 
-  if (data?.id_persona) {
-    return data.id_persona as UUID;
+  if (!data) {
+    return null;
   }
 
-  const { data: altData, error: altError } = await supabase
-    .from("documento")
-    .select("id_persona")
-    .eq("tipo", "inscription_curp_text")
-    .eq("url_archivo", normalizedCurp)
-    .limit(1)
-    .maybeSingle();
-
-  if (altError) {
-    throw new Error(
-      `Error al buscar la CURP ${normalizedCurp}: ${altError.message}`,
-    );
-  }
-
-  if (altData?.id_persona) {
-    return altData.id_persona as UUID;
-  }
-
-  return null;
+  return {
+    alumnoId: data.id_alumno as UUID,
+    personaId: data.id_persona as UUID,
+  };
 };
 
-const insertUbicacion = async (lat: number, lng: number): Promise<UUID> => {
+const findPersonaIdByCurp = async (
+  normalizedCurp: string,
+): Promise<UUID | null> => {
+  const alumno = await findAlumnoByCurp(normalizedCurp);
+  return alumno?.personaId ?? null;
+};
+
+interface UbicacionInput {
+  lat?: number | null;
+  lng?: number | null;
+  municipio?: string | null;
+  estado?: string | null;
+  calle?: string | null;
+  numero?: string | null;
+  colonia?: string | null;
+  codigoPostal?: string | null;
+  direccionCompleta?: string | null;
+}
+
+const insertUbicacion = async (input: UbicacionInput = {}): Promise<UUID> => {
+  const latitud = formatCoordinate(input.lat ?? 0);
+  const longitud = formatCoordinate(input.lng ?? 0);
+  const municipio = input.municipio?.trim() || "Sin especificar";
+  const estado = input.estado?.trim() || "Sin especificar";
+
   const { data, error } = await supabase
     .from("ubicacion")
     .insert({
-      latitud: formatCoordinate(lat),
-      longitud: formatCoordinate(lng),
-      municipio: "Desconocido",
-      estado: "Oaxaca",
+      latitud,
+      longitud,
+      municipio,
+      estado,
+      calle: input.calle?.trim() || null,
+      numero: input.numero?.trim() || null,
+      colonia: input.colonia?.trim() || null,
+      codigo_postal: input.codigoPostal?.trim() || null,
+      direccion_completa: input.direccionCompleta?.trim() || null,
     })
     .select("id_ubicacion")
     .single();
@@ -184,33 +228,6 @@ const getCarreraId = async (nombre: string): Promise<UUID> => {
   return data.id_carrera as UUID;
 };
 
-const ensureCampusCarrera = async (idCampus: UUID, idCarrera: UUID) => {
-  const { data, error } = await supabase
-    .from("campus_carrera")
-    .select("id_campus")
-    .eq("id_campus", idCampus)
-    .eq("id_carrera", idCarrera)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(
-      `Error al validar la relación campus/carrera: ${error.message}`,
-    );
-  }
-
-  if (!data) {
-    const { error: insertError } = await supabase
-      .from("campus_carrera")
-      .insert({ id_campus: idCampus, id_carrera: idCarrera });
-
-    if (insertError) {
-      throw new Error(
-        "No existe relación entre el campus y la carrera seleccionados",
-      );
-    }
-  }
-};
-
 const insertPersona = async (
   params: Partial<{
     nombre: string;
@@ -218,7 +235,6 @@ const insertPersona = async (
     apellido_materno: string | null;
     id_ubicacion: UUID | null;
     fecha_nacimiento: string | null;
-    sexo: string | null;
     telefono: string | null;
   }>,
 ): Promise<UUID> => {
@@ -228,7 +244,6 @@ const insertPersona = async (
     apellido_materno: params.apellido_materno ?? null,
     id_ubicacion: params.id_ubicacion ?? null,
     fecha_nacimiento: params.fecha_nacimiento ?? null,
-    sexo: params.sexo ?? null,
     telefono: params.telefono ?? null,
   };
 
@@ -247,13 +262,45 @@ const insertPersona = async (
   return data.id_persona as UUID;
 };
 
+const insertAlumno = async (
+  params: {
+    personaId: UUID;
+    correo: string;
+    curp: string;
+    sexo: string | null;
+    campusId: UUID;
+    carreraId: UUID;
+  },
+): Promise<UUID> => {
+  const payload = {
+    id_persona: params.personaId,
+    correo: params.correo.trim() || null,
+    curp: params.curp.trim(),
+    sexo: params.sexo ?? null,
+    id_campus: params.campusId,
+    id_carrera: params.carreraId,
+  };
+
+  const { data, error } = await supabase
+    .from("alumno")
+    .insert(payload)
+    .select("id_alumno")
+    .single();
+
+  if (error) {
+    throw new Error(`No se pudo crear el alumno: ${error.message}`);
+  }
+
+  return data.id_alumno as UUID;
+};
+
 const insertInfoMedica = async (
-  idPersona: UUID,
+  idAlumno: UUID,
   tipoSangre: string,
   alergias: string | null,
 ) => {
   const { error } = await supabase.from("info_medica").insert({
-    id_persona: idPersona,
+    id_alumno: idAlumno,
     tipo_sangre: tipoSangre || null,
     alergias,
   });
@@ -304,20 +351,20 @@ const getOrCreate = async (
   return inserted[idField] as UUID;
 };
 
-const insertPersonaEnfermedad = async (idPersona: UUID, idEnfermedad: UUID) => {
+const insertAlumnoEnfermedad = async (idAlumno: UUID, idEnfermedad: UUID) => {
   const { error } = await supabase
-    .from("persona_enfermedad")
-    .insert({ id_persona: idPersona, id_enfermedad: idEnfermedad });
+    .from("alumno_enfermedad")
+    .insert({ id_alumno: idAlumno, id_enfermedad: idEnfermedad });
 
   if (error && error.code !== "23505") {
     throw new Error(`No se pudo vincular la enfermedad: ${error.message}`);
   }
 };
 
-const insertPersonaLengua = async (idPersona: UUID, idLengua: UUID) => {
+const insertAlumnoLengua = async (idAlumno: UUID, idLengua: UUID) => {
   const { error } = await supabase
-    .from("persona_lengua")
-    .insert({ id_persona: idPersona, id_lengua: idLengua, nivel: null });
+    .from("alumno_lengua")
+    .insert({ id_alumno: idAlumno, id_lengua: idLengua, nivel: null });
 
   if (error && error.code !== "23505") {
     throw new Error(`No se pudo vincular la lengua: ${error.message}`);
@@ -345,10 +392,10 @@ const getEscuelaId = async (
     return data.id_escuela as UUID;
   }
 
-  let ubicacionId: UUID | null = null;
-  if (ubicacion) {
-    ubicacionId = await insertUbicacion(ubicacion.lat, ubicacion.lng);
-  }
+  const ubicacionId = await insertUbicacion({
+    lat: ubicacion?.lat ?? 0,
+    lng: ubicacion?.lng ?? 0,
+  });
 
   const { data: inserted, error: insertError } = await supabase
     .from("escuela")
@@ -364,13 +411,13 @@ const getEscuelaId = async (
 };
 
 const insertEscolaridad = async (
-  idPersona: UUID,
+  idAlumno: UUID,
   idEscuela: UUID,
   promedio: number,
   anioEgreso: number | null,
 ) => {
   const { error } = await supabase.from("escolaridad").insert({
-    id_persona: idPersona,
+    id_alumno: idAlumno,
     id_escuela: idEscuela,
     promedio,
     anio_egreso: anioEgreso,
@@ -382,10 +429,18 @@ const insertEscolaridad = async (
 };
 
 const insertDocumento = async (
-  idPersona: UUID,
+  idAlumno: UUID,
   tipo: string,
   contenido: unknown,
 ) => {
+  if (
+    tipo === "curp_text" ||
+    tipo === "contact_email" ||
+    tipo === "responsable_info"
+  ) {
+    return;
+  }
+
   if (contenido === undefined || contenido === null) return;
   const value =
     typeof contenido === "string" ? contenido : JSON.stringify(contenido);
@@ -393,7 +448,7 @@ const insertDocumento = async (
 
   const { error } = await supabase
     .from("documento")
-    .insert({ id_persona: idPersona, tipo, url_archivo: value });
+    .insert({ id_alumno: idAlumno, tipo, url_archivo: value });
 
   if (error) {
     throw new Error(
@@ -495,7 +550,7 @@ const sendAdmissionEmail = async (params: {
 };
 
 const insertResponsable = async (
-  idPersona: UUID,
+  idAlumno: UUID,
   payload: {
     name: string;
     lastName: string;
@@ -506,17 +561,39 @@ const insertResponsable = async (
     address?: { lat: number; lng: number } | null;
     email?: string | null;
   },
-) => {
+): Promise<{ responsableId: UUID; personaId: UUID }> => {
+  const {
+    apellidoPaterno: responsableApellidoPaterno,
+    apellidoMaterno: responsableApellidoMaterno,
+  } = splitLastNames(payload.lastName);
+
   const fullName =
     `${payload.name?.trim() ?? ""} ${payload.lastName?.trim() ?? ""}`.trim() ||
     "Responsable";
+
+  let responsableLocationId: UUID | null = null;
+  if (payload.address?.lat !== undefined && payload.address?.lng !== undefined) {
+    responsableLocationId = await insertUbicacion({
+      lat: payload.address.lat,
+      lng: payload.address.lng,
+    });
+  }
+
+  const responsablePersonaId = await insertPersona({
+    nombre: fullName,
+    apellido_paterno: responsableApellidoPaterno,
+    apellido_materno: responsableApellidoMaterno,
+    id_ubicacion: responsableLocationId,
+    fecha_nacimiento: payload.birthDate ?? null,
+    telefono: payload.phone ?? null,
+  });
+
   const { data, error } = await supabase
     .from("responsable")
     .insert({
-      id_persona: idPersona,
-      nombre: fullName,
-      telefono: payload.phone ?? null,
+      id_persona: responsablePersonaId,
       parentesco: payload.relationShip ?? null,
+      ocupacion: payload.occupation ?? null,
     })
     .select("id_responsable")
     .single();
@@ -530,25 +607,26 @@ const insertResponsable = async (
   const responsableId = data.id_responsable as UUID;
 
   const responsableInfo = {
+    responsableId,
     birthDate: payload.birthDate ?? null,
     occupation: payload.occupation ?? null,
     location: payload.address ?? null,
+    phone: payload.phone ?? null,
     email: payload.email ?? null,
   };
 
-  await insertDocumento(idPersona, "responsable_info", responsableInfo);
-  return responsableId;
+  return { responsableId, personaId: responsablePersonaId };
 };
 
 const insertFicha = async (
-  idPersona: UUID,
+  idAlumno: UUID,
   idCarrera: UUID,
   estado: string,
 ): Promise<UUID> => {
   const { data, error } = await supabase
     .from("ficha")
     .insert({
-      id_persona: idPersona,
+      id_alumno: idAlumno,
       id_carrera: idCarrera,
       estado,
     })
@@ -601,21 +679,8 @@ const scheduleAdmissionExam = async (fichaId: UUID) => {
   return `${examDate}T10:00:00`;
 };
 
-const getPersonaIdByCurp = async (curp: string): Promise<UUID> => {
-  const normalized = normalizeCurp(curp);
-  const personaId = await findPersonaIdByCurp(normalized);
-
-  if (!personaId) {
-    throw new Error(
-      `No se encontró un registro existente para la CURP ${normalized}`,
-    );
-  }
-
-  return personaId;
-};
-
 const insertInscriptionRecord = async (
-  idPersona: UUID,
+  idAlumno: UUID,
   normalizedCurp: string,
   folioActa: string,
   registrarResponsable: boolean,
@@ -624,7 +689,7 @@ const insertInscriptionRecord = async (
   const { data, error } = await supabase
     .from("inscripciones")
     .insert({
-      id_persona: idPersona,
+      id_alumno: idAlumno,
       curp: normalizedCurp,
       folio_acta_nacimiento: folioActa,
       registrar_responsable: registrarResponsable,
@@ -712,25 +777,36 @@ export const saveApplicant = async (form: FormGetToken) => {
 
     const campusId = await getCampusId(form.identification.campus);
     const carreraId = await getCarreraId(form.identification.career);
-    await ensureCampusCarrera(campusId, carreraId);
+    const applicantLocationId = await insertUbicacion({
+      lat: form.identification.address.lat,
+      lng: form.identification.address.lng,
+    });
 
-    const applicantLocationId = await insertUbicacion(
-      form.identification.address.lat,
-      form.identification.address.lng,
-    );
+    const {
+      apellidoPaterno: applicantApellidoPaterno,
+      apellidoMaterno: applicantApellidoMaterno,
+    } = splitLastNames(form.identification.lastName);
 
     const applicantPersonaId = await insertPersona({
       nombre: form.identification.firstName.trim(),
-      apellido_paterno: form.identification.lastName.trim() || null,
-      apellido_materno: null,
+      apellido_paterno: applicantApellidoPaterno,
+      apellido_materno: applicantApellidoMaterno,
       id_ubicacion: applicantLocationId,
       fecha_nacimiento: form.identification.birthDate,
-      sexo: mapGenderToDb(form.identification.gender),
       telefono: form.identification.phone,
     });
 
+    const applicantAlumnoId = await insertAlumno({
+      personaId: applicantPersonaId,
+      correo: form.identification.email,
+      curp: form.identification.curp,
+      sexo: mapGenderToDb(form.identification.gender),
+      campusId,
+      carreraId,
+    });
+
     await insertInfoMedica(
-      applicantPersonaId,
+      applicantAlumnoId,
       form.applicant.bloodType,
       joinOrNull(form.applicant.allergies),
     );
@@ -742,7 +818,7 @@ export const saveApplicant = async (form: FormGetToken) => {
         "id_enfermedad",
         disease,
       );
-      await insertPersonaEnfermedad(applicantPersonaId, idEnfermedad);
+      await insertAlumnoEnfermedad(applicantAlumnoId, idEnfermedad);
     }
 
     const uniqueLanguages = Array.from(
@@ -750,7 +826,7 @@ export const saveApplicant = async (form: FormGetToken) => {
     );
     for (const language of uniqueLanguages) {
       const idLengua = await getOrCreate("lengua", "id_lengua", language);
-      await insertPersonaLengua(applicantPersonaId, idLengua);
+      await insertAlumnoLengua(applicantAlumnoId, idLengua);
     }
 
     const escuelaId = await getEscuelaId(
@@ -766,25 +842,28 @@ export const saveApplicant = async (form: FormGetToken) => {
       !Number.isNaN(form.school.graduationYear)
     ) {
       await insertEscolaridad(
-        applicantPersonaId,
+        applicantAlumnoId,
         escuelaId,
         finalAverageValue,
         form.school.graduationYear,
       );
     }
 
-    const documentEntries = Object.entries(form.personalDocumentation) as [
+    const personalDocumentsEntries = Object.entries(
+      form.personalDocumentation,
+    ) as [
       keyof FormGetToken["personalDocumentation"],
       FormGetToken["personalDocumentation"][keyof FormGetToken["personalDocumentation"]],
     ][];
 
-    for (const [key, value] of documentEntries) {
-      if (typeof value === "string" && value.length > 0) {
-        await insertDocumento(applicantPersonaId, key, value);
+    for (const [key, value] of personalDocumentsEntries) {
+      const label = PERSONAL_DOCUMENT_TYPES[key];
+      if (typeof value === "string" && value.trim().length > 0 && label) {
+        await insertDocumento(applicantAlumnoId, label, value.trim());
       }
     }
 
-    await insertResponsable(applicantPersonaId, {
+    await insertResponsable(applicantAlumnoId, {
       name: form.responsible.name,
       lastName: form.responsible.lastName,
       birthDate: form.responsible.birthDate,
@@ -795,42 +874,35 @@ export const saveApplicant = async (form: FormGetToken) => {
       email: null,
     });
 
-    await insertDocumento(
-      applicantPersonaId,
-      "curp_text",
-      form.identification.curp,
-    );
-
-    await insertDocumento(
-      applicantPersonaId,
-      "contact_email",
-      form.identification.email,
-    );
-
     const fichaId = await insertFicha(
-      applicantPersonaId,
+      applicantAlumnoId,
       carreraId,
       "registrado",
     );
     const examIsoDate = await scheduleAdmissionExam(fichaId);
 
-    const lastNameParts = form.identification.lastName
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean);
-    const apellidoPaterno = lastNameParts.shift() ?? "";
-    const apellidoMaterno = lastNameParts.join(" ");
+    const {
+      apellidoPaterno: notificationApellidoPaterno,
+      apellidoMaterno: notificationApellidoMaterno,
+    } = splitLastNames(form.identification.lastName);
 
     await sendAdmissionEmail({
       email: form.identification.email,
       nombre: form.identification.firstName,
-      apellidoPaterno,
-      apellidoMaterno,
+      apellidoPaterno: notificationApellidoPaterno ?? undefined,
+      apellidoMaterno: notificationApellidoMaterno ?? undefined,
       curp: form.identification.curp,
       fechaExamenIso: examIsoDate,
     });
 
-    return { applicantPersonaId, campusId, carreraId, fichaId, examIsoDate };
+    return {
+      applicantPersonaId,
+      applicantAlumnoId,
+      campusId,
+      carreraId,
+      fichaId,
+      examIsoDate,
+    };
   } catch (error) {
     throw error;
   }
@@ -839,9 +911,9 @@ export const saveApplicant = async (form: FormGetToken) => {
 export const saveInscription = async (form: IFormInscription) => {
   try {
     const normalizedCurp = normalizeCurp(form.personalInfo.curp);
-    const existingPersonaId = await findPersonaIdByCurp(normalizedCurp);
+    const existingAlumno = await findAlumnoByCurp(normalizedCurp);
 
-    if (existingPersonaId) {
+    if (existingAlumno) {
       const { data: existingInscription, error: existingInscriptionError } =
         await supabase
           .from("inscripciones")
@@ -860,15 +932,15 @@ export const saveInscription = async (form: IFormInscription) => {
       }
     }
 
-    const personaId = await getPersonaIdByCurp(normalizedCurp);
+    const alumnoRecord = await findAlumnoByCurp(normalizedCurp);
 
-    await insertDocumento(
-      personaId,
-      "inscription_birth_certificate",
-      form.personalInfo.birthCertificate,
-    );
+    if (!alumnoRecord) {
+      throw new Error(
+        `No se encontró un aspirante registrado con la CURP ${normalizedCurp}.`,
+      );
+    }
 
-    await insertDocumento(personaId, "inscription_curp_text", normalizedCurp);
+    const { alumnoId, personaId } = alumnoRecord;
 
     const registrarResponsable = !!form.responsible?.hasDifferentResponsible;
     let responsableId: UUID | null = null;
@@ -888,7 +960,7 @@ export const saveInscription = async (form: IFormInscription) => {
         );
       }
 
-      responsableId = await insertResponsable(personaId, {
+      const responsable = await insertResponsable(alumnoId, {
         name: resp.name,
         lastName: resp.lastName,
         birthDate: resp.birthDate,
@@ -898,23 +970,27 @@ export const saveInscription = async (form: IFormInscription) => {
         address: resp.address ?? null,
         email: resp.email ?? null,
       });
+      responsableId = responsable.responsableId;
     }
 
+    const folioActa = form.personalInfo.birthCertificate.trim().toUpperCase();
+
     const inscriptionId = await insertInscriptionRecord(
-      personaId,
+      alumnoId,
       normalizedCurp,
-      form.personalInfo.birthCertificate,
+      folioActa,
       registrarResponsable,
       responsableId,
     );
 
     await Promise.all(
       form.schoolInfo.map(async (info, index) => {
-        const schoolId = await getEscuelaId(
-          info.name.trim(),
-          info.typeInstitution,
-          null,
-        );
+        const cleanedName = info.name.trim();
+        const cleanedPlace = info.placeExpedition.trim();
+        const cleanedType = info.typeInstitution;
+        const cleanedFolio = info.certificate.trim().toUpperCase();
+
+        const schoolId = await getEscuelaId(cleanedName, cleanedType, null);
         const suffix = index + 1;
         const averageValue = parseAverage(info.averageFinal);
         if (averageValue === null) {
@@ -923,40 +999,18 @@ export const saveInscription = async (form: IFormInscription) => {
           );
         }
 
-        await insertEscolaridad(personaId, schoolId, averageValue, null);
-
-        if (info.certificate) {
-          await insertDocumento(
-            personaId,
-            `inscription_certificate_folio_${suffix}`,
-            info.certificate,
-          );
-        }
-
-        if (info.placeExpedition) {
-          await insertDocumento(
-            personaId,
-            `inscription_certificate_place_${suffix}`,
-            info.placeExpedition,
-          );
-        }
-
-        await insertDocumento(
-          personaId,
-          `inscription_certificate_type_${suffix}`,
-          info.typeInstitution,
-        );
+        await insertEscolaridad(alumnoId, schoolId, averageValue, null);
 
         let urlCertificado: string | null = null;
         if (
           typeof info.certificateFile === "string" &&
           info.certificateFile.length > 0
         ) {
-          urlCertificado = info.certificateFile;
+          urlCertificado = info.certificateFile.trim();
           await insertDocumento(
-            personaId,
-            `inscription_certificate_url_${suffix}`,
-            info.certificateFile,
+            alumnoId,
+            `Certificado ${INSCRIPTION_LEVELS[index] ?? `Registro ${suffix}`}`,
+            urlCertificado,
           );
         } else if (info.certificateFile instanceof File) {
           throw new Error(
@@ -966,17 +1020,17 @@ export const saveInscription = async (form: IFormInscription) => {
 
         const level = INSCRIPTION_LEVELS[index] ?? `Registro ${suffix}`;
         await insertInscripcionEscolaridad(inscriptionId, level, {
-          nombre: info.name.trim(),
-          lugarExpedicion: info.placeExpedition.trim(),
+          nombre: cleanedName,
+          lugarExpedicion: cleanedPlace,
           promedio: averageValue,
-          folio: info.certificate,
+          folio: cleanedFolio,
           urlCertificado,
-          tipoInstitucion: info.typeInstitution,
+          tipoInstitucion: cleanedType,
         });
       }),
     );
 
-    return { personaId, inscriptionId };
+    return { personaId, alumnoId, inscriptionId };
   } catch (error) {
     throw error;
   }
