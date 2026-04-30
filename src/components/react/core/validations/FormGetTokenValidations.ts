@@ -96,7 +96,12 @@ const identificationUserSchema = z.object({
 
 /* ---------------- DOCUMENTOS ---------------- */
 
-const fileOrUrlSchema = z.union([z.instanceof(File), z.string().url()]);
+const fileOrUrlSchema = z.union([
+  z.instanceof(File, {
+    message: "El formato del archivo no es el correcto",
+  }),
+  z.string().url({ error: "El formato del archivo no es el correcto" }),
+]);
 
 const personalDocumentationSchema = z.object({
   birthCertificate: fileOrUrlSchema,
@@ -140,7 +145,9 @@ const schoolSchema = z
         invalid_type_error: "Solo se aceptan numeros",
       })
       .min(1980, "Año inválido")
-      .max(new Date().getFullYear()),
+      .max(new Date().getFullYear(), {
+        message: "El año debe ser menor al 2026",
+      }),
 
     graduationYear: z
       .number({
@@ -148,7 +155,9 @@ const schoolSchema = z
         invalid_type_error: "Solo se aceptan numeros",
       })
       .min(1980, "Año inválido")
-      .max(new Date().getFullYear()),
+      .max(new Date().getFullYear(), {
+        message: "El año debe ser menor al 2026",
+      }),
 
     finalAverage: z
       .string({
